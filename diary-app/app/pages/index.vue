@@ -69,6 +69,10 @@
           <div class="modal-body">
             {{ selectedDiary.content }}
           </div>
+
+          <!-- 이미지 갤러리 -->
+          <ImageGallery v-if="selectedDiary.images && selectedDiary.images.length > 0" :imageIds="selectedDiary.images" />
+
           <button @click="deleteDiary" class="modal-delete">
             🗑️ 삭제하기
           </button>

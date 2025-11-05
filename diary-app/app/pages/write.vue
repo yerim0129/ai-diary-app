@@ -48,6 +48,9 @@
           class="diary-textarea"
         ></textarea>
 
+        <!-- 이미지 업로더 -->
+        <ImageUploader v-model="selectedImages" :max-images="5" />
+
         <div class="action-buttons">
           <button @click="saveDiary" class="btn btn-save" :disabled="!content.trim()">
             💾 저장하기
@@ -131,6 +134,7 @@ const selectedMood = ref(null)
 const currentPrompt = ref('')
 const aiPrompt = ref('')
 const content = ref('')
+const selectedImages = ref([]) // 선택된 이미지 목록
 
 const getMoodLabel = (mood) => {
   const labels = {
@@ -173,6 +177,7 @@ const changePrompt = () => {
 const resetMood = () => {
   selectedMood.value = null
   content.value = ''
+  selectedImages.value = [] // 이미지도 초기화
 }
 
 const saveDiary = () => {
@@ -183,7 +188,8 @@ const saveDiary = () => {
     date: new Date().toLocaleDateString('ko-KR'),
     mood: selectedMood.value,
     prompt: currentPrompt.value,
-    content: content.value
+    content: content.value,
+    images: selectedImages.value.map(img => img.id) // 이미지 ID만 저장
   }
 
   save(diary)
