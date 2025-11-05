@@ -1,5 +1,9 @@
 <template>
-  <div class="container">
+  <!-- 로딩 스켈레톤 -->
+  <CalendarSkeleton v-if="isLoading" />
+
+  <!-- 실제 컨텐츠 -->
+  <div v-else class="container">
     <div class="content">
       <!-- 헤더 -->
       <div class="header">
@@ -104,6 +108,7 @@ const moodLabels = {
 const currentDate = ref(new Date())
 const calendarDays = ref([])
 const selectedDiary = ref(null)
+const isLoading = ref(true)
 const monthlyStats = ref({
   total: 0,
   topMood: '-'
@@ -217,8 +222,11 @@ const closeDiary = () => {
   selectedDiary.value = null
 }
 
-onMounted(() => {
+onMounted(async () => {
+  isLoading.value = true
+  await new Promise(resolve => setTimeout(resolve, 600))
   generateCalendar()
+  isLoading.value = false
 })
 </script>
 
@@ -226,7 +234,8 @@ onMounted(() => {
 .container {
   min-height: 100vh;
   padding: 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf3 100%);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  transition: background 0.3s ease;
 }
 
 .content {
@@ -241,33 +250,35 @@ onMounted(() => {
 .back-btn {
   display: inline-block;
   padding: 8px 16px;
-  background: white;
-  color: #6b7280;
+  background: var(--bg-card);
+  color: var(--text-secondary);
   border-radius: 8px;
   text-decoration: none;
   font-size: 0.9rem;
   margin-bottom: 16px;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: background 0.3s ease, color 0.3s ease;
+  box-shadow: 0 2px 4px var(--shadow);
 }
 
 .back-btn:hover {
-  background: #f9fafb;
+  background: var(--bg-hover);
   transform: translateY(-1px);
 }
 
 .title {
   font-size: 2.2rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
   text-align: center;
   margin-bottom: 8px;
+  transition: color 0.3s ease;
 }
 
 .subtitle {
   text-align: center;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 1rem;
+  transition: color 0.3s ease;
 }
 
 .month-selector {
@@ -280,37 +291,39 @@ onMounted(() => {
 
 .month-btn {
   padding: 12px 20px;
-  background: white;
+  background: var(--bg-card);
   border: none;
   border-radius: 8px;
   font-size: 1.2rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: background 0.3s ease, color 0.3s ease;
+  box-shadow: 0 2px 4px var(--shadow);
 }
 
 .month-btn:hover {
-  background: #f9fafb;
-  color: #8b5cf6;
+  background: var(--bg-hover);
+  color: var(--accent-primary);
   transform: translateY(-1px);
 }
 
 .current-month {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
   min-width: 180px;
   text-align: center;
+  transition: color 0.3s ease;
 }
 
 .calendar-card {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px var(--shadow);
   margin-bottom: 24px;
+  transition: background 0.3s ease;
 }
 
 .weekday-header {
@@ -324,8 +337,9 @@ onMounted(() => {
   text-align: center;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--text-secondary);
   padding: 8px;
+  transition: color 0.3s ease;
 }
 
 .calendar-grid {
@@ -342,9 +356,9 @@ onMounted(() => {
   justify-content: center;
   padding: 8px;
   border-radius: 12px;
-  background: #f9fafb;
+  background: var(--bg-hover);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.3s ease, transform 0.2s;
   position: relative;
 }
 
@@ -371,8 +385,9 @@ onMounted(() => {
 .day-number {
   font-size: 1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
   margin-bottom: 4px;
+  transition: color 0.3s ease;
 }
 
 .day-emoji {
@@ -380,14 +395,15 @@ onMounted(() => {
 }
 
 .calendar-stats {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px var(--shadow);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 32px;
+  transition: background 0.3s ease;
 }
 
 .stat-item {
@@ -399,19 +415,22 @@ onMounted(() => {
 
 .stat-label {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--text-secondary);
+  transition: color 0.3s ease;
 }
 
 .stat-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .stat-divider {
   width: 1px;
   height: 40px;
-  background: #e5e7eb;
+  background: var(--border-color);
+  transition: background 0.3s ease;
 }
 
 /* 모달 */
@@ -430,7 +449,7 @@ onMounted(() => {
 }
 
 .modal-content {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 32px;
   max-width: 600px;
@@ -438,27 +457,28 @@ onMounted(() => {
   max-height: 80vh;
   overflow-y: auto;
   position: relative;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px var(--shadow-modal);
+  transition: background 0.3s ease;
 }
 
 .modal-close {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: #f3f4f6;
+  background: var(--bg-hover-deep);
   border: none;
   width: 32px;
   height: 32px;
   border-radius: 50%;
   font-size: 1.2rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .modal-close:hover {
-  background: #e5e7eb;
-  color: #1f2937;
+  background: var(--bg-hover-deep);
+  color: var(--text-primary);
 }
 
 .modal-header {
@@ -475,24 +495,27 @@ onMounted(() => {
 .modal-date {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--text-secondary);
+  transition: color 0.3s ease;
 }
 
 .modal-prompt {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #374151;
-  background: #f9fafb;
+  color: var(--text-body);
+  background: var(--bg-hover);
   padding: 16px;
   border-radius: 12px;
   margin-bottom: 16px;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .modal-body {
   font-size: 1rem;
   line-height: 1.8;
-  color: #4b5563;
+  color: var(--text-body);
   white-space: pre-wrap;
+  transition: color 0.3s ease;
 }
 
 @media (max-width: 640px) {

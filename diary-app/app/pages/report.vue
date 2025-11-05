@@ -369,7 +369,8 @@ onMounted(() => {
 .container {
   min-height: 100vh;
   padding: 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf3 100%);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  transition: background 0.3s ease;
 }
 
 .content {
@@ -384,33 +385,35 @@ onMounted(() => {
 .back-btn {
   display: inline-block;
   padding: 8px 16px;
-  background: white;
-  color: #6b7280;
+  background: var(--bg-card);
+  color: var(--text-secondary);
   border-radius: 8px;
   text-decoration: none;
   font-size: 0.9rem;
   margin-bottom: 16px;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: background 0.3s ease, color 0.3s ease;
+  box-shadow: 0 2px 4px var(--shadow);
 }
 
 .back-btn:hover {
-  background: #f9fafb;
+  background: var(--bg-hover);
   transform: translateY(-1px);
 }
 
 .title {
   font-size: 2.2rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
   text-align: center;
   margin-bottom: 8px;
+  transition: color 0.3s ease;
 }
 
 .subtitle {
   text-align: center;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 1rem;
+  transition: color 0.3s ease;
 }
 
 .period-selector {
@@ -422,45 +425,47 @@ onMounted(() => {
 
 .period-btn {
   padding: 12px 24px;
-  border: 2px solid #e5e7eb;
-  background: white;
+  border: 2px solid var(--border-color);
+  background: var(--bg-card);
   border-radius: 12px;
   font-size: 1rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .period-btn:hover {
-  border-color: #8b5cf6;
-  color: #8b5cf6;
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
 }
 
 .period-btn.active {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
   color: white;
-  border-color: #8b5cf6;
+  border-color: var(--accent-primary);
 }
 
 .empty-state {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 64px 32px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: background 0.3s ease;
 }
 
 .empty-text {
   font-size: 1.2rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin-bottom: 24px;
+  transition: color 0.3s ease;
 }
 
 .btn-write {
   display: inline-block;
   padding: 14px 28px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
   color: white;
   border-radius: 12px;
   text-decoration: none;
@@ -473,11 +478,12 @@ onMounted(() => {
 .trend-card,
 .insights-card,
 .highlights-card {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 32px;
   margin-bottom: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: background 0.3s ease;
 }
 
 .trend-box {
@@ -486,7 +492,7 @@ onMounted(() => {
   gap: 20px;
   padding: 24px;
   border-radius: 12px;
-  border-left: 4px solid #6b7280;
+  border-left: 4px solid var(--text-secondary);
 }
 
 .trend-box.trend-improving {
@@ -512,15 +518,17 @@ onMounted(() => {
   flex: 1;
   font-size: 1.1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
   line-height: 1.6;
+  transition: color 0.3s ease;
 }
 
 .section-title {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
   margin-bottom: 24px;
+  transition: color 0.3s ease;
 }
 
 .summary-grid {
@@ -540,14 +548,16 @@ onMounted(() => {
 
 .summary-label {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin-bottom: 8px;
+  transition: color 0.3s ease;
 }
 
 .summary-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .mood-chart {
@@ -576,15 +586,17 @@ onMounted(() => {
 .mood-name {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-body);
+  transition: color 0.3s ease;
 }
 
 .bar-container {
   flex: 1;
   height: 40px;
-  background: #f3f4f6;
+  background: var(--bg-hover-deep);
   border-radius: 8px;
   overflow: hidden;
+  transition: background 0.3s ease;
 }
 
 .bar-fill {
@@ -619,16 +631,18 @@ onMounted(() => {
 .bar-label {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .insight-item {
   display: flex;
   gap: 16px;
   padding: 16px;
-  background: #f9fafb;
+  background: var(--bg-hover);
   border-radius: 12px;
   margin-bottom: 12px;
+  transition: background 0.3s ease;
 }
 
 .insight-icon {
@@ -639,21 +653,22 @@ onMounted(() => {
   flex: 1;
   font-size: 1rem;
   line-height: 1.6;
-  color: #374151;
+  color: var(--text-body);
+  transition: color 0.3s ease;
 }
 
 .highlight-item {
   padding: 20px;
-  background: #f9fafb;
+  background: var(--bg-hover);
   border-radius: 12px;
   margin-bottom: 12px;
   cursor: pointer;
-  transition: all 0.2s;
-  border-left: 4px solid #e5e7eb;
+  transition: background 0.3s ease, transform 0.2s;
+  border-left: 4px solid var(--border-color);
 }
 
 .highlight-item:hover {
-  background: #f3f4f6;
+  background: var(--bg-hover-deep);
   transform: translateY(-2px);
 }
 
@@ -691,13 +706,15 @@ onMounted(() => {
 .highlight-date {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--text-secondary);
+  transition: color 0.3s ease;
 }
 
 .highlight-preview {
   font-size: 0.95rem;
   line-height: 1.6;
-  color: #4b5563;
+  color: var(--text-body);
+  transition: color 0.3s ease;
 }
 
 .action-section {
@@ -737,7 +754,7 @@ onMounted(() => {
 }
 
 .modal-content {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 32px;
   max-width: 600px;
@@ -745,27 +762,28 @@ onMounted(() => {
   max-height: 80vh;
   overflow-y: auto;
   position: relative;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px var(--shadow-modal);
+  transition: background 0.3s ease;
 }
 
 .modal-close {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: #f3f4f6;
+  background: var(--bg-hover-deep);
   border: none;
   width: 32px;
   height: 32px;
   border-radius: 50%;
   font-size: 1.2rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .modal-close:hover {
-  background: #e5e7eb;
-  color: #1f2937;
+  background: var(--bg-hover-deep);
+  color: var(--text-primary);
 }
 
 .modal-header {
@@ -782,24 +800,27 @@ onMounted(() => {
 .modal-date {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--text-secondary);
+  transition: color 0.3s ease;
 }
 
 .modal-prompt {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #374151;
-  background: #f9fafb;
+  color: var(--text-body);
+  background: var(--bg-hover);
   padding: 16px;
   border-radius: 12px;
   margin-bottom: 16px;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .modal-body {
   font-size: 1rem;
   line-height: 1.8;
-  color: #4b5563;
+  color: var(--text-body);
   white-space: pre-wrap;
+  transition: color 0.3s ease;
 }
 
 @media (max-width: 640px) {

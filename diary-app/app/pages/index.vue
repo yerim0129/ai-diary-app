@@ -1,5 +1,9 @@
 <template>
-  <div class="container">
+  <!-- 로딩 스켈레톤 -->
+  <HomePageSkeleton v-if="isLoading" />
+
+  <!-- 실제 컨텐츠 -->
+  <div v-else class="container">
     <div class="content">
       <!-- 헤더 -->
       <header class="header">
@@ -100,6 +104,7 @@ const stats = ref({
 
 const recentDiaries = ref([])
 const selectedDiary = ref(null)
+const isLoading = ref(true)
 
 const getMoodEmoji = (mood) => moods[mood] || '😊'
 
@@ -174,8 +179,15 @@ const calculateStats = () => {
   recentDiaries.value = sortedDiaries.slice(0, 3)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // 로딩 시뮬레이션 (실제 데이터 로드)
+  isLoading.value = true
+
+  // 최소 로딩 시간 보장 (UX 개선)
+  await new Promise(resolve => setTimeout(resolve, 800))
+
   calculateStats()
+  isLoading.value = false
 })
 </script>
 
@@ -183,7 +195,8 @@ onMounted(() => {
 .container {
   min-height: 100vh;
   padding: 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf3 100%);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  transition: background 0.3s ease;
 }
 
 .content {
@@ -200,12 +213,12 @@ onMounted(() => {
 .title {
   font-size: 2.2rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
 .subtitle {
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 1rem;
 }
 
@@ -217,11 +230,11 @@ onMounted(() => {
 }
 
 .stat-card {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 24px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px var(--shadow);
   transition: all 0.2s;
   cursor: pointer;
   text-decoration: none;
@@ -230,7 +243,7 @@ onMounted(() => {
 
 .stat-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 16px var(--shadow-hover);
 }
 
 .stat-icon {
@@ -240,22 +253,22 @@ onMounted(() => {
 
 .stat-label {
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin-bottom: 8px;
 }
 
 .stat-value {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
 }
 
 .recent-section {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px var(--shadow);
 }
 
 .section-header {
@@ -268,25 +281,25 @@ onMounted(() => {
 .section-title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
 }
 
 .view-all-btn {
   font-size: 0.9rem;
-  color: #8b5cf6;
+  color: var(--accent-primary);
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s;
 }
 
 .view-all-btn:hover {
-  color: #7c3aed;
+  color: var(--accent-secondary);
 }
 
 .empty-recent {
   text-align: center;
   padding: 32px;
-  color: #9ca3af;
+  color: var(--text-tertiary);
 }
 
 .recent-list {
@@ -301,13 +314,13 @@ onMounted(() => {
   gap: 16px;
   padding: 12px;
   border-radius: 8px;
-  background: #f9fafb;
+  background: var(--bg-hover);
   transition: all 0.2s;
   cursor: pointer;
 }
 
 .recent-item:hover {
-  background: #f3f4f6;
+  background: var(--bg-hover-deep);
   transform: translateY(-1px);
 }
 
@@ -321,13 +334,13 @@ onMounted(() => {
 
 .recent-date {
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin-bottom: 4px;
 }
 
 .recent-preview {
   font-size: 0.9rem;
-  color: #374151;
+  color: var(--text-body);
 }
 
 .action-section {
@@ -339,7 +352,7 @@ onMounted(() => {
   width: 100%;
   max-width: 400px;
   padding: 18px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -356,7 +369,7 @@ onMounted(() => {
 
 .btn-write:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 8px 16px var(--accent-shadow);
 }
 
 /* 모달 */
@@ -375,7 +388,7 @@ onMounted(() => {
 }
 
 .modal-content {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 32px;
   max-width: 600px;
@@ -383,27 +396,27 @@ onMounted(() => {
   max-height: 80vh;
   overflow-y: auto;
   position: relative;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px var(--shadow-modal);
 }
 
 .modal-close {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: #f3f4f6;
+  background: var(--bg-hover-deep);
   border: none;
   width: 32px;
   height: 32px;
   border-radius: 50%;
   font-size: 1.2rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .modal-close:hover {
-  background: #e5e7eb;
-  color: #1f2937;
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .modal-header {
@@ -420,14 +433,14 @@ onMounted(() => {
 .modal-date {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .modal-prompt {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #374151;
-  background: #f9fafb;
+  color: var(--text-body);
+  background: var(--bg-hover);
   padding: 16px;
   border-radius: 12px;
   margin-bottom: 16px;
@@ -436,7 +449,7 @@ onMounted(() => {
 .modal-body {
   font-size: 1rem;
   line-height: 1.8;
-  color: #4b5563;
+  color: var(--text-body);
   white-space: pre-wrap;
   margin-bottom: 20px;
 }
@@ -444,8 +457,8 @@ onMounted(() => {
 .modal-delete {
   width: 100%;
   padding: 14px;
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--delete-bg);
+  color: var(--delete-text);
   border: none;
   border-radius: 8px;
   font-size: 1rem;
@@ -455,7 +468,7 @@ onMounted(() => {
 }
 
 .modal-delete:hover {
-  background: #fecaca;
+  background: var(--delete-bg-hover);
 }
 
 @media (max-width: 640px) {

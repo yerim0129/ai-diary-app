@@ -1,5 +1,9 @@
 <template>
-  <div class="container">
+  <!-- 로딩 스켈레톤 -->
+  <InsightsSkeleton v-if="isLoading" />
+
+  <!-- 실제 컨텐츠 -->
+  <div v-else class="container">
     <div class="content">
       <!-- 헤더 -->
       <div class="header">
@@ -99,6 +103,7 @@ const { getAll } = useDiary()
 
 const diaries = ref([])
 const expandedDiaries = ref([])
+const isLoading = ref(true)
 
 const moods = {
   happy: '😊',
@@ -210,8 +215,11 @@ const toggleDiary = (id) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  isLoading.value = true
+  await new Promise(resolve => setTimeout(resolve, 700))
   calculateStats()
+  isLoading.value = false
 })
 </script>
 
@@ -219,7 +227,8 @@ onMounted(() => {
 .container {
   min-height: 100vh;
   padding: 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf3 100%);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  transition: background 0.3s ease;
 }
 
 .content {
@@ -234,53 +243,57 @@ onMounted(() => {
 .back-btn {
   display: inline-block;
   padding: 8px 16px;
-  background: white;
-  color: #6b7280;
+  background: var(--bg-card);
+  color: var(--text-secondary);
   border-radius: 8px;
   text-decoration: none;
   font-size: 0.9rem;
   margin-bottom: 16px;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: background 0.3s ease, color 0.3s ease;
+  box-shadow: 0 2px 4px var(--shadow);
 }
 
 .back-btn:hover {
-  background: #f9fafb;
+  background: var(--bg-hover);
   transform: translateY(-1px);
 }
 
 .title {
   font-size: 2.2rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
   text-align: center;
   margin-bottom: 8px;
+  transition: color 0.3s ease;
 }
 
 .subtitle {
   text-align: center;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 1rem;
+  transition: color 0.3s ease;
 }
 
 .empty-state {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 64px 32px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: background 0.3s ease;
 }
 
 .empty-text {
   font-size: 1.2rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin-bottom: 24px;
+  transition: color 0.3s ease;
 }
 
 .btn-write {
   display: inline-block;
   padding: 14px 28px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
   color: white;
   border-radius: 12px;
   text-decoration: none;
@@ -300,11 +313,12 @@ onMounted(() => {
 }
 
 .stat-card {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 24px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: background 0.3s ease;
 }
 
 .stat-icon {
@@ -314,29 +328,33 @@ onMounted(() => {
 
 .stat-label {
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin-bottom: 8px;
+  transition: color 0.3s ease;
 }
 
 .stat-value {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .mood-analysis {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 32px;
   margin-bottom: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: background 0.3s ease;
 }
 
 .section-title {
   font-size: 1.3rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
   margin-bottom: 24px;
+  transition: color 0.3s ease;
 }
 
 .mood-stats {
@@ -351,7 +369,8 @@ onMounted(() => {
   gap: 16px;
   padding: 16px;
   border-radius: 12px;
-  background: #f9fafb;
+  background: var(--bg-hover);
+  transition: background 0.3s ease;
 }
 
 .mood-emoji {
@@ -368,33 +387,37 @@ onMounted(() => {
 .mood-name {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-body);
+  transition: color 0.3s ease;
 }
 
 .mood-bar {
   height: 8px;
-  background: #e5e7eb;
+  background: var(--border-color);
   border-radius: 4px;
   overflow: hidden;
+  transition: background 0.3s ease;
 }
 
 .mood-bar-fill {
   height: 100%;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
   border-radius: 4px;
   transition: width 0.3s;
 }
 
 .mood-count {
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--text-secondary);
+  transition: color 0.3s ease;
 }
 
 .diary-section {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: background 0.3s ease;
 }
 
 .diary-list {
@@ -404,15 +427,15 @@ onMounted(() => {
 }
 
 .diary-card {
-  background: #f9fafb;
+  background: var(--bg-hover);
   border-radius: 12px;
   padding: 20px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.3s ease, transform 0.2s;
 }
 
 .diary-card:hover {
-  background: #f3f4f6;
+  background: var(--bg-hover-deep);
   transform: translateY(-2px);
 }
 
@@ -435,40 +458,43 @@ onMounted(() => {
 
 .diary-date {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-weight: 600;
+  transition: color 0.3s ease;
 }
 
 .expand-btn {
   background: none;
   border: none;
   font-size: 1rem;
-  color: #9ca3af;
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 4px 8px;
+  transition: color 0.3s ease;
 }
 
 .diary-prompt {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-body);
   margin-bottom: 12px;
   padding: 10px;
-  background: white;
+  background: var(--bg-card);
   border-radius: 8px;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .diary-content {
   font-size: 0.9rem;
   line-height: 1.6;
-  color: #4b5563;
+  color: var(--text-body);
   max-height: 60px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  transition: max-height 0.3s;
+  transition: max-height 0.3s, color 0.3s ease;
   white-space: pre-wrap;
 }
 

@@ -198,17 +198,18 @@ const saveDiary = () => {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf3 100%);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  transition: background 0.3s ease;
 }
 
 .card {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 32px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px var(--shadow-modal);
   max-width: 600px;
   width: 100%;
-  transition: background 0.3s;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .title {
@@ -216,14 +217,16 @@ const saveDiary = () => {
   font-weight: 700;
   text-align: center;
   margin-bottom: 32px;
-  color: #1f2937;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .subtitle {
   font-size: 1.3rem;
   text-align: center;
   margin-bottom: 24px;
-  color: #374151;
+  color: var(--text-body);
+  transition: color 0.3s ease;
 }
 
 .mood-grid {
@@ -238,9 +241,9 @@ const saveDiary = () => {
   align-items: center;
   gap: 8px;
   padding: 20px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border-color);
   border-radius: 12px;
-  background: white;
+  background: var(--bg-card);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -258,7 +261,8 @@ const saveDiary = () => {
 .mood-label {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #4b5563;
+  color: var(--text-body);
+  transition: color 0.3s ease;
 }
 
 .back-to-home {
@@ -266,14 +270,14 @@ const saveDiary = () => {
   text-align: center;
   margin-top: 24px;
   padding: 12px;
-  color: #6b7280;
+  color: var(--text-secondary);
   text-decoration: none;
   font-size: 0.95rem;
   transition: color 0.2s;
 }
 
 .back-to-home:hover {
-  color: #374151;
+  color: var(--text-body);
 }
 
 .write-section {
@@ -286,16 +290,16 @@ const saveDiary = () => {
   align-self: flex-start;
   padding: 8px 16px;
   border: none;
-  background: #f3f4f6;
+  background: var(--bg-hover-deep);
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.9rem;
-  color: #4b5563;
-  transition: background 0.2s;
+  color: var(--text-body);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .back-btn:hover {
-  background: #e5e7eb;
+  background: var(--bg-hover-deep);
 }
 
 .ai-prompt-box {
@@ -346,19 +350,21 @@ const saveDiary = () => {
 
 .prompt-box {
   padding: 20px;
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--shadow);
   border-radius: 12px;
   border-left: 4px solid #667eea;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  transition: background 0.3s ease;
 }
 
 .prompt {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
   margin: 0;
+  transition: color 0.3s ease;
 }
 
 .refresh-btn {
@@ -383,12 +389,14 @@ const saveDiary = () => {
   width: 100%;
   min-height: 250px;
   padding: 16px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border-color);
   border-radius: 12px;
   font-size: 1rem;
   font-family: inherit;
   resize: vertical;
-  transition: border-color 0.2s;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transition: border-color 0.2s, background 0.3s ease, color 0.3s ease;
 }
 
 .diary-textarea:focus {
@@ -430,15 +438,16 @@ const saveDiary = () => {
 }
 
 .btn-cancel {
-  background: #f3f4f6;
-  color: #4b5563;
+  background: var(--bg-hover-deep);
+  color: var(--text-body);
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .btn-cancel:hover {
-  background: #e5e7eb;
+  background: var(--bg-hover-deep);
 }
 
 /* 기분별 배경색 */
