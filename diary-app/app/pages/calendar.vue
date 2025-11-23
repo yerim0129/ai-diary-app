@@ -78,6 +78,18 @@
           <div class="modal-body">
             {{ selectedDiary.content }}
           </div>
+
+          <!-- 이미지 갤러리 -->
+          <ImageGallery v-if="selectedDiary.images && selectedDiary.images.length > 0" :imageIds="selectedDiary.images" />
+
+          <div class="modal-actions">
+            <button @click="editDiary" class="modal-edit">
+              ✏️ 수정하기
+            </button>
+            <button @click="deleteDiary" class="modal-delete">
+              🗑️ 삭제하기
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -85,7 +97,7 @@
 </template>
 
 <script setup>
-const { getAll } = useDiary()
+const { getAll, deleteDiary: removeDiary } = useDiary()
 
 const weekdays = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -220,6 +232,37 @@ const openDiary = (diary) => {
 
 const closeDiary = () => {
   selectedDiary.value = null
+}
+
+const editDiary = () => {
+  if (!selectedDiary.value) return
+  navigateTo(`/write?edit=${selectedDiary.value.id}`)
+}
+
+const deleteDiary = async () => {
+  if (!selectedDiary.value) return
+
+  if (confirm('정말로 이 일기를 삭제하시겠습니까?')) {
+    try {
+      const diary = selectedDiary.value
+
+      // 1. 첨부된 이미지 먼저 삭제
+      if (diary.images && diary.images.length > 0) {
+        const { deleteImages } = useImageDB()
+        await deleteImages(diary.images)
+      }
+
+      // 2. 일기 데이터 삭제 (useDiary 사용)
+      removeDiary(diary.id)
+
+      // 3. 상태 업데이트
+      closeDiary()
+      generateCalendar() // 캘린더 다시 생성
+    } catch (error) {
+      console.error('일기 삭제 중 오류:', error)
+      alert('일기를 삭제하는 중 오류가 발생했습니다.')
+    }
+  }
 }
 
 onMounted(async () => {
@@ -515,7 +558,48 @@ onMounted(async () => {
   line-height: 1.8;
   color: var(--text-body);
   white-space: pre-wrap;
+  margin-bottom: 20px;
   transition: color 0.3s ease;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.modal-edit {
+  flex: 1;
+  padding: 14px;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-edit:hover {
+  background: var(--accent-secondary);
+  transform: translateY(-1px);
+}
+
+.modal-delete {
+  flex: 1;
+  padding: 14px;
+  background: var(--delete-bg);
+  color: var(--delete-text);
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-delete:hover {
+  background: var(--delete-bg-hover);
 }
 
 @media (max-width: 640px) {

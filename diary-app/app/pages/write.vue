@@ -52,12 +52,19 @@
         <ImageUploader v-model="selectedImages" :max-images="5" />
 
         <div class="action-buttons">
-          <button @click="saveDiary" class="btn btn-save" :disabled="!content.trim()">
-            💾 저장하기
+          <button @click="saveDiary" class="btn btn-save" :disabled="!content.trim() || isAnalyzing">
+            <span v-if="isAnalyzing" class="loading-spinner">🔄</span>
+            <span v-else>{{ editMode ? '✏️ 수정하기' : '💾 저장하기' }}</span>
           </button>
           <NuxtLink to="/" class="btn btn-cancel">
             취소
           </NuxtLink>
+        </div>
+
+        <!-- AI 분석 로딩 메시지 -->
+        <div v-if="isAnalyzing" class="analyzing-message">
+          <span class="loading-icon">🧠</span>
+          <span>AI가 감정을 분석하고 있어요...</span>
         </div>
       </div>
     </div>
@@ -65,9 +72,11 @@
 </template>
 
 <script setup>
-const { save } = useDiary()
+const { save, getById, update } = useDiary()
 const { getRecommendedPrompt } = useAI()
+const { analyzeDiary } = useEmotionAnalysis()
 const router = useRouter()
+const route = useRoute()
 
 const moods = {
   happy: '😊',
@@ -136,6 +145,13 @@ const aiPrompt = ref('')
 const content = ref('')
 const selectedImages = ref([]) // 선택된 이미지 목록
 
+// 수정 모드 관련
+const editMode = ref(false)
+const editingDiaryId = ref(null)
+
+// AI 감정 분석 로딩 상태
+const isAnalyzing = ref(false)
+
 const getMoodLabel = (mood) => {
   const labels = {
     happy: '행복',
@@ -180,21 +196,84 @@ const resetMood = () => {
   selectedImages.value = [] // 이미지도 초기화
 }
 
-const saveDiary = () => {
+const saveDiary = async () => {
   if (!content.value.trim()) return
 
-  const diary = {
-    id: Date.now(),
-    date: new Date().toLocaleDateString('ko-KR'),
-    mood: selectedMood.value,
-    prompt: currentPrompt.value,
-    content: content.value,
-    images: selectedImages.value.map(img => img.id) // 이미지 ID만 저장
-  }
+  try {
+    // 1. AI 감정 분석 시작
+    isAnalyzing.value = true
+    const analysis = await analyzeDiary(content.value)
 
-  save(diary)
-  router.push('/')
+    if (editMode.value) {
+      // 수정 모드: 기존 일기 업데이트
+      const updatedDiary = {
+        content: content.value,
+        images: selectedImages.value.map(img => img.id), // 이미지 ID만 저장
+        // AI 분석 결과 추가
+        emotion: analysis.emotion,
+        keywords: analysis.keywords,
+        feedback: analysis.feedback,
+        emotionScore: analysis.score
+      }
+
+      update(editingDiaryId.value, updatedDiary)
+    } else {
+      // 생성 모드: 새 일기 저장
+      const diary = {
+        id: Date.now(),
+        date: new Date().toLocaleDateString('ko-KR'),
+        mood: selectedMood.value,
+        prompt: currentPrompt.value,
+        content: content.value,
+        images: selectedImages.value.map(img => img.id), // 이미지 ID만 저장
+        // AI 분석 결과 추가
+        emotion: analysis.emotion,
+        keywords: analysis.keywords,
+        feedback: analysis.feedback,
+        emotionScore: analysis.score
+      }
+
+      save(diary)
+    }
+
+    router.push('/')
+  } catch (error) {
+    console.error('일기 저장 중 오류:', error)
+    alert('일기를 저장하는 중 오류가 발생했습니다.')
+  } finally {
+    isAnalyzing.value = false
+  }
 }
+
+// 페이지 로드 시 수정 모드 확인
+onMounted(async () => {
+  const editId = route.query.edit
+
+  if (editId) {
+    // 수정 모드
+    editMode.value = true
+    editingDiaryId.value = Number(editId)
+
+    const diary = getById(editingDiaryId.value)
+
+    if (diary) {
+      // 기존 일기 데이터 불러오기
+      selectedMood.value = diary.mood
+      currentPrompt.value = diary.prompt
+      content.value = diary.content
+
+      // 이미지 불러오기
+      if (diary.images && diary.images.length > 0) {
+        const { loadMultipleImages } = useImageUpload()
+        selectedImages.value = await loadMultipleImages(diary.images, 'thumbnail')
+      }
+    } else {
+      // 일기를 찾을 수 없으면 홈으로
+      alert('일기를 찾을 수 없습니다.')
+      router.push('/')
+    }
+  }
+})
 </script>
 
 <style scoped>
@@ -454,6 +533,59 @@ const saveDiary = () => {
 
 .btn-cancel:hover {
   background: var(--bg-hover-deep);
+}
+
+/* AI 분석 로딩 */
+.loading-spinner {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.analyzing-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  border-radius: 12px;
+  color: #4338ca;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-top: 16px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.loading-icon {
+  font-size: 1.5rem;
+  animation: pulse-icon 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes pulse-icon {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 /* 기분별 배경색 */

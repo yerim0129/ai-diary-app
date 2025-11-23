@@ -73,9 +73,40 @@
           <!-- 이미지 갤러리 -->
           <ImageGallery v-if="selectedDiary.images && selectedDiary.images.length > 0" :imageIds="selectedDiary.images" />
 
-          <button @click="deleteDiary" class="modal-delete">
-            🗑️ 삭제하기
-          </button>
+          <!-- AI 분석 결과 -->
+          <div v-if="selectedDiary.emotion" class="ai-analysis">
+            <div class="analysis-header">🧠 AI 감정 분석</div>
+            <div class="analysis-content">
+              <div class="analysis-item">
+                <span class="analysis-label">감정:</span>
+                <span class="analysis-value">
+                  {{ getMoodEmoji(selectedDiary.emotion) }} {{ getMoodLabel(selectedDiary.emotion) }}
+                  <span class="analysis-score">({{ selectedDiary.emotionScore }}점)</span>
+                </span>
+              </div>
+              <div class="analysis-item" v-if="selectedDiary.keywords && selectedDiary.keywords.length > 0">
+                <span class="analysis-label">키워드:</span>
+                <span class="analysis-value">
+                  <span v-for="(keyword, index) in selectedDiary.keywords" :key="index" class="keyword-tag">
+                    {{ keyword }}
+                  </span>
+                </span>
+              </div>
+              <div class="analysis-item" v-if="selectedDiary.feedback">
+                <span class="analysis-label">피드백:</span>
+                <span class="analysis-value feedback-text">{{ selectedDiary.feedback }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button @click="editDiary" class="modal-edit">
+              ✏️ 수정하기
+            </button>
+            <button @click="deleteDiary" class="modal-delete">
+              🗑️ 삭제하기
+            </button>
+          </div>
         </div>
       </div>
 
@@ -90,7 +121,7 @@
 </template>
 
 <script setup>
-const { getAll } = useDiary()
+const { getAll, deleteDiary: removeDiary } = useDiary()
 
 const moods = {
   happy: '😊',
@@ -98,6 +129,14 @@ const moods = {
   sad: '😔',
   angry: '😤',
   tired: '😴'
+}
+
+const moodLabels = {
+  happy: '행복',
+  calm: '평온',
+  sad: '우울',
+  angry: '화남',
+  tired: '피곤'
 }
 
 const stats = ref({
@@ -111,6 +150,7 @@ const selectedDiary = ref(null)
 const isLoading = ref(true)
 
 const getMoodEmoji = (mood) => moods[mood] || '😊'
+const getMoodLabel = (mood) => moodLabels[mood] || mood
 
 const openDiary = (diary) => {
   selectedDiary.value = diary
@@ -120,19 +160,34 @@ const closeDiary = () => {
   selectedDiary.value = null
 }
 
-const deleteDiary = () => {
+const editDiary = () => {
+  if (!selectedDiary.value) return
+  navigateTo(`/write?edit=${selectedDiary.value.id}`)
+}
+
+const deleteDiary = async () => {
   if (!selectedDiary.value) return
 
   if (confirm('정말로 이 일기를 삭제하시겠습니까?')) {
-    const allDiaries = getAll()
-    const filteredDiaries = allDiaries.filter(d => d.id !== selectedDiary.value.id)
+    try {
+      const diary = selectedDiary.value
 
-    // LocalStorage에 저장
-    localStorage.setItem('diaries', JSON.stringify(filteredDiaries))
+      // 1. 첨부된 이미지 먼저 삭제
+      if (diary.images && diary.images.length > 0) {
+        const { deleteImages } = useImageDB()
+        await deleteImages(diary.images)
+      }
 
-    // 상태 업데이트
-    closeDiary()
-    calculateStats()
+      // 2. 일기 데이터 삭제 (useDiary 사용)
+      removeDiary(diary.id)
+
+      // 3. 상태 업데이트
+      closeDiary()
+      calculateStats()
+    } catch (error) {
+      console.error('일기 삭제 중 오류:', error)
+      alert('일기를 삭제하는 중 오류가 발생했습니다.')
+    }
   }
 }
 
@@ -458,8 +513,98 @@ onMounted(async () => {
   margin-bottom: 20px;
 }
 
+/* AI 분석 결과 */
+.ai-analysis {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 2px solid #0ea5e9;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.analysis-header {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0369a1;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.analysis-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.analysis-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.analysis-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #075985;
+}
+
+.analysis-value {
+  font-size: 1rem;
+  color: #0c4a6e;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.analysis-score {
+  font-size: 0.9rem;
+  color: #0284c7;
+  font-weight: 600;
+}
+
+.keyword-tag {
+  display: inline-block;
+  background: #0ea5e9;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.feedback-text {
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.modal-edit {
+  flex: 1;
+  padding: 14px;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-edit:hover {
+  background: var(--accent-secondary);
+  transform: translateY(-1px);
+}
+
 .modal-delete {
-  width: 100%;
+  flex: 1;
   padding: 14px;
   background: var(--delete-bg);
   color: var(--delete-text);

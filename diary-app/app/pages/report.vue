@@ -149,7 +149,6 @@
 
 <script setup>
 const { getAll } = useDiary()
-const { analyzeTrend } = useEmotionAnalysis()
 
 const moods = {
   happy: '😊',
@@ -247,7 +246,55 @@ const generateReport = () => {
   }
 
   // 감정 추세 분석
-  emotionTrend.value = analyzeTrend(allDiaries)
+  emotionTrend.value = analyzeEmotionTrend(allDiaries)
+}
+
+const analyzeEmotionTrend = (allDiaries) => {
+  if (allDiaries.length < 2) {
+    return null
+  }
+
+  // 최근 5개 일기의 감정 점수 평균
+  const recentDiaries = allDiaries.slice(0, 5)
+  const olderDiaries = allDiaries.slice(5, 10)
+
+  if (olderDiaries.length === 0) {
+    return {
+      trend: 'stable',
+      message: '일기가 더 쌓이면 감정 추세를 분석해드릴게요!'
+    }
+  }
+
+  // 감정별 점수 (긍정적일수록 높음)
+  const emotionScores = {
+    happy: 5,
+    calm: 4,
+    tired: 3,
+    sad: 2,
+    angry: 1
+  }
+
+  const recentAvg = recentDiaries.reduce((sum, d) => sum + (emotionScores[d.mood] || 3), 0) / recentDiaries.length
+  const olderAvg = olderDiaries.reduce((sum, d) => sum + (emotionScores[d.mood] || 3), 0) / olderDiaries.length
+
+  const diff = recentAvg - olderAvg
+
+  if (diff > 0.5) {
+    return {
+      trend: 'improving',
+      message: '최근 감정 상태가 좋아지고 있어요! 긍정적인 변화가 느껴집니다. 계속 이런 흐름을 유지해보세요! 📈'
+    }
+  } else if (diff < -0.5) {
+    return {
+      trend: 'declining',
+      message: '최근 힘든 시간을 보내고 계시네요. 스스로를 돌보는 시간을 가지세요. 필요하다면 주변에 도움을 요청하는 것도 좋습니다. 💙'
+    }
+  } else {
+    return {
+      trend: 'stable',
+      message: '감정 상태가 안정적으로 유지되고 있어요. 꾸준한 자기 관찰이 도움이 됩니다. 🌿'
+    }
+  }
 }
 
 const generateInsights = (diaries, moodCounts, topMood, diversity) => {

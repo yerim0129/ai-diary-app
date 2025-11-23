@@ -1,75 +1,156 @@
-# Nuxt Minimal Starter
+# 📔 AI Diary - 감정 분석 일기장
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+AI 기반 한국어 감정 분석 기능이 탑재된 개인 일기 웹 애플리케이션입니다.
 
-## Setup
+![Nuxt 3](https://img.shields.io/badge/Nuxt-3-00DC82?logo=nuxt.js)
+![Vue 3](https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js)
+![License](https://img.shields.io/badge/License-MIT-blue)
 
-Make sure to install dependencies:
+## ✨ 주요 기능
+
+- **📝 일기 작성**: 감정 선택 → AI 추천 질문 → 자유 작성
+- **🧠 AI 감정 분석**: 키워드 기반 한국어 감정 분석 엔진
+- **📸 이미지 첨부**: IndexedDB를 활용한 로컬 이미지 저장 (최대 5장)
+- **📅 캘린더 뷰**: 월별 일기 관리 및 감정 추적
+- **📊 감정 리포트**: 주간/월간 감정 통계 및 AI 인사이트
+- **🌓 다크모드**: 라이트/다크 테마 지원
+- **✏️ CRUD 기능**: 일기 작성, 조회, 수정, 삭제
+
+## 🛠️ 기술 스택
+
+- **Frontend**: Nuxt 3 (Vue 3 Composition API)
+- **Storage**:
+  - LocalStorage (일기 텍스트 데이터)
+  - IndexedDB (이미지 파일 - `idb` 라이브러리 사용)
+- **AI**: 한국어 키워드 기반 감정 분석 엔진
+- **Styling**: CSS Variables (테마 시스템)
+
+## 🚀 시작하기
+
+### 설치
 
 ```bash
-# npm
+# 저장소 클론
+git clone https://github.com/your-username/ai-diary.git
+cd ai-diary/diary-app
+
+# 의존성 설치
 npm install
 
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
+# 개발 서버 실행 (http://localhost:3000)
 npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
-
-Build the application for production:
+### 프로덕션 빌드
 
 ```bash
-# npm
+# 빌드
 npm run build
 
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
+# 미리보기
+npm run preview
 ```
 
-Locally preview production build:
+### 환경 변수 (선택 사항)
+
+`.env.example`을 `.env`로 복사하세요.
 
 ```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
+cp .env.example .env
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+> **참고**: 현재 버전은 로컬 키워드 분석을 사용하므로 API 토큰 없이도 정상 작동합니다.
+
+## 📁 프로젝트 구조
+
+```
+diary-app/
+├── app/
+│   ├── components/         # Vue 컴포넌트
+│   │   ├── ImageUploader.vue
+│   │   ├── ImageGallery.vue
+│   │   └── HomePageSkeleton.vue
+│   ├── composables/        # 비즈니스 로직
+│   │   ├── useDiary.js         # 일기 CRUD
+│   │   ├── useEmotionAnalysis.js  # AI 감정 분석
+│   │   ├── useImageDB.js       # IndexedDB 관리
+│   │   ├── useImageUpload.js   # 이미지 업로드
+│   │   └── useAI.js            # AI 프롬프트 생성
+│   ├── pages/              # 라우트 페이지
+│   │   ├── index.vue           # 홈 (최근 일기)
+│   │   ├── write.vue           # 일기 작성/수정
+│   │   ├── calendar.vue        # 캘린더 뷰
+│   │   ├── insights.vue        # 전체 일기 목록
+│   │   └── report.vue          # 감정 리포트
+│   └── app.vue             # 루트 컴포넌트 (테마)
+├── server/
+│   └── api/                # Server API Routes
+└── public/                 # 정적 파일
+```
+
+## 🧠 AI 감정 분석 엔진
+
+### 지원 감정
+- 😊 **행복** (Happy)
+- 😌 **평온** (Calm)
+- 😔 **우울** (Sad)
+- 😤 **화남** (Angry)
+- 😴 **피곤** (Tired)
+
+### 분석 결과
+- **감정**: AI가 판단한 주요 감정
+- **키워드**: 추출된 감정 키워드 (최대 3개)
+- **피드백**: 감정에 맞는 공감 메시지
+- **점수**: 감정 신뢰도 (0-100점)
+
+### 키워드 사전 예시
+- **행복**: 행복, 기쁨, 즐거, 좋아, 웃음, 감사, 사랑, 성공, 뿌듯...
+- **평온**: 평온, 편안, 차분, 고요, 여유, 휴식, 명상, 안정...
+- **우울**: 슬프, 우울, 힘들, 외로, 그립, 아프, 실패, 후회...
+- **화남**: 화, 짜증, 분노, 억울, 불만, 싫어, 미워, 스트레스...
+- **피곤**: 피곤, 지침, 지쳐, 졸려, 무기력, 번아웃, 탈진...
+
+## 📊 데이터 저장 구조
+
+### LocalStorage (diaries)
+```json
+{
+  "id": 1732348800000,
+  "date": "2025. 11. 23.",
+  "mood": "happy",
+  "prompt": "오늘 가장 감사했던 순간은?",
+  "content": "오늘은 정말 행복한 하루였다...",
+  "images": [123456, 789012],
+  "emotion": "happy",
+  "keywords": ["행복", "기쁨", "좋아"],
+  "feedback": "정말 멋진 하루였네요!",
+  "emotionScore": 87,
+  "updatedAt": "2025-11-23T12:34:56.789Z"
+}
+```
+
+### IndexedDB (images)
+- **Database**: `diary-images`
+- **ObjectStore**: `images`
+- **Key**: timestamp (number)
+- **Value**: `{ id, file, thumbnail, uploadedAt }`
+
+## 🎨 테마 시스템
+
+CSS Variables를 사용한 라이트/다크 테마 지원:
+
+- `--bg-primary`, `--bg-secondary`: 배경색
+- `--text-primary`, `--text-body`: 텍스트 색상
+- `--accent-primary`, `--accent-secondary`: 강조색
+
+## 📝 라이선스
+
+MIT License
+
+## 👨‍💻 개발자
+
+AI 에이전트 개발자를 꿈꾸는..
+
+---
+
+**Made with ❤️ using Nuxt 3 and Vue 3**
