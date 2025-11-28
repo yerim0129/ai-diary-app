@@ -97,6 +97,11 @@
 </template>
 
 <script setup>
+/**
+ * 📅 일기 캘린더 페이지
+ * - 백엔드 API에서 일기 데이터를 가져와 캘린더를 표시합니다
+ * - getAll()과 deleteDiary()는 이제 async 함수입니다
+ */
 const { getAll, deleteDiary: removeDiary } = useDiary()
 
 const weekdays = ['일', '월', '화', '수', '목', '금', '토']
@@ -106,7 +111,8 @@ const moods = {
   calm: '😌',
   sad: '😔',
   angry: '😤',
-  tired: '😴'
+  tired: '😴',
+  excited: '🤩'  // 백엔드 샘플 데이터 지원
 }
 
 const moodLabels = {
@@ -134,21 +140,31 @@ const currentMonthText = computed(() => {
 
 const getMoodEmoji = (mood) => moods[mood] || '😊'
 
-const generateCalendar = () => {
-  const year = currentDate.value.getFullYear()
-  const month = currentDate.value.getMonth()
+/**
+ * 📅 캘린더 생성 함수
+ * - 백엔드 API에서 일기 데이터를 가져와 캘린더를 생성합니다
+ */
+const generateCalendar = async () => {
+  console.log('📅 [calendar.vue] 캘린더 생성 시작...')
 
-  // 이번 달 첫날과 마지막 날
-  const firstDay = new Date(year, month, 1)
-  const lastDay = new Date(year, month + 1, 0)
+  try {
+    const year = currentDate.value.getFullYear()
+    const month = currentDate.value.getMonth()
 
-  // 캘린더 시작일 (이전 달 날짜 포함)
-  const startDay = new Date(firstDay)
-  startDay.setDate(startDay.getDate() - firstDay.getDay())
+    // 이번 달 첫날과 마지막 날
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
 
-  // 모든 일기 가져오기
-  const allDiaries = getAll()
-  const diaryMap = {}
+    // 캘린더 시작일 (이전 달 날짜 포함)
+    const startDay = new Date(firstDay)
+    startDay.setDate(startDay.getDate() - firstDay.getDay())
+
+    // 📌 백엔드에서 모든 일기 가져오기 (GET /api/diaries)
+    console.log('📅 [calendar.vue] 백엔드 API 호출: GET /api/diaries')
+    const allDiaries = await getAll()
+    console.log(`📅 [calendar.vue] 총 ${allDiaries.length}개의 일기 조회됨`)
+
+    const diaryMap = {}
 
   allDiaries.forEach(diary => {
     const diaryDate = new Date(diary.date)
@@ -177,10 +193,15 @@ const generateCalendar = () => {
     })
   }
 
-  calendarDays.value = days
+    calendarDays.value = days
 
-  // 월간 통계 계산
-  calculateMonthlyStats(allDiaries, year, month)
+    // 월간 통계 계산
+    calculateMonthlyStats(allDiaries, year, month)
+
+    console.log('✅ [calendar.vue] 캘린더 생성 완료!')
+  } catch (error) {
+    console.error('❌ [calendar.vue] 캘린더 생성 실패:', error)
+  }
 }
 
 const calculateMonthlyStats = (allDiaries, year, month) => {
@@ -208,22 +229,26 @@ const calculateMonthlyStats = (allDiaries, year, month) => {
   }
 }
 
-const previousMonth = () => {
+// 📌 이전 달로 이동
+const previousMonth = async () => {
+  console.log('📅 [calendar.vue] 이전 달로 이동')
   currentDate.value = new Date(
     currentDate.value.getFullYear(),
     currentDate.value.getMonth() - 1,
     1
   )
-  generateCalendar()
+  await generateCalendar()
 }
 
-const nextMonth = () => {
+// 📌 다음 달로 이동
+const nextMonth = async () => {
+  console.log('📅 [calendar.vue] 다음 달로 이동')
   currentDate.value = new Date(
     currentDate.value.getFullYear(),
     currentDate.value.getMonth() + 1,
     1
   )
-  generateCalendar()
+  await generateCalendar()
 }
 
 const openDiary = (diary) => {
@@ -239,37 +264,49 @@ const editDiary = () => {
   navigateTo(`/write?edit=${selectedDiary.value.id}`)
 }
 
+/**
+ * 🗑️ 일기 삭제 함수
+ * - 백엔드 API를 호출하여 일기를 삭제합니다 (DELETE /api/diaries/:id)
+ */
 const deleteDiary = async () => {
   if (!selectedDiary.value) return
 
   if (confirm('정말로 이 일기를 삭제하시겠습니까?')) {
+    console.log('🗑️ [calendar.vue] 일기 삭제 시작...')
+
     try {
       const diary = selectedDiary.value
 
-      // 1. 첨부된 이미지 먼저 삭제
+      // 1. 첨부된 이미지 먼저 삭제 (IndexedDB에서)
       if (diary.images && diary.images.length > 0) {
+        console.log('🖼️ [calendar.vue] 첨부 이미지 삭제 중...', diary.images)
         const { deleteImages } = useImageDB()
         await deleteImages(diary.images)
       }
 
-      // 2. 일기 데이터 삭제 (useDiary 사용)
-      removeDiary(diary.id)
+      // 2. 📌 일기 데이터 삭제 (백엔드 API 호출)
+      console.log('🗑️ [calendar.vue] 백엔드 API 호출: DELETE /api/diaries/' + diary.id)
+      await removeDiary(diary.id)
+      console.log('✅ [calendar.vue] 일기 삭제 완료!')
 
       // 3. 상태 업데이트
       closeDiary()
-      generateCalendar() // 캘린더 다시 생성
+      await generateCalendar() // 캘린더 다시 생성
     } catch (error) {
-      console.error('일기 삭제 중 오류:', error)
+      console.error('❌ [calendar.vue] 일기 삭제 중 오류:', error)
       alert('일기를 삭제하는 중 오류가 발생했습니다.')
     }
   }
 }
 
+// 📌 페이지 로드 시 캘린더 생성
 onMounted(async () => {
+  console.log('🚀 [calendar.vue] 페이지 로드...')
   isLoading.value = true
-  await new Promise(resolve => setTimeout(resolve, 600))
-  generateCalendar()
+  await new Promise(resolve => setTimeout(resolve, 500))
+  await generateCalendar()
   isLoading.value = false
+  console.log('✅ [calendar.vue] 페이지 로드 완료!')
 })
 </script>
 

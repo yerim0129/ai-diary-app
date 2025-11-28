@@ -99,6 +99,11 @@
 </template>
 
 <script setup>
+/**
+ * 📊 감정 대시보드 페이지
+ * - 백엔드 API에서 일기 데이터를 가져와 통계를 표시합니다
+ * - getAll()은 이제 async 함수입니다 (GET /api/diaries)
+ */
 const { getAll } = useDiary()
 
 const diaries = ref([])
@@ -110,7 +115,8 @@ const moods = {
   calm: '😌',
   sad: '😔',
   angry: '😤',
-  tired: '😴'
+  tired: '😴',
+  excited: '🤩'  // 백엔드 샘플 데이터 지원
 }
 
 const moodLabels = {
@@ -143,13 +149,24 @@ const getMoodPercentage = (count) => {
   return Math.round((count / diaries.value.length) * 100)
 }
 
-const calculateStats = () => {
-  const allDiaries = getAll()
-  diaries.value = allDiaries
+/**
+ * 📊 통계 계산 함수
+ * - 백엔드 API에서 일기 데이터를 가져와 통계를 계산합니다
+ */
+const calculateStats = async () => {
+  console.log('📊 [insights.vue] 통계 계산 시작...')
 
-  const today = new Date()
-  const currentMonth = today.getMonth()
-  const currentYear = today.getFullYear()
+  try {
+    // 📌 백엔드에서 모든 일기 조회 (GET /api/diaries)
+    console.log('📊 [insights.vue] 백엔드 API 호출: GET /api/diaries')
+    const allDiaries = await getAll()
+    console.log(`📊 [insights.vue] 총 ${allDiaries.length}개의 일기 조회됨`)
+
+    diaries.value = allDiaries
+
+    const today = new Date()
+    const currentMonth = today.getMonth()
+    const currentYear = today.getFullYear()
 
   // 이번 달 일기 수
   const thisMonthDiaries = allDiaries.filter(d => {
@@ -197,13 +214,18 @@ const calculateStats = () => {
     tired: 0
   }
 
-  allDiaries.forEach(diary => {
-    if (moodCounts[diary.mood] !== undefined) {
-      moodCounts[diary.mood]++
-    }
-  })
+    allDiaries.forEach(diary => {
+      if (moodCounts[diary.mood] !== undefined) {
+        moodCounts[diary.mood]++
+      }
+    })
 
-  moodStats.value = moodCounts
+    moodStats.value = moodCounts
+
+    console.log('✅ [insights.vue] 통계 계산 완료!')
+  } catch (error) {
+    console.error('❌ [insights.vue] 통계 계산 실패:', error)
+  }
 }
 
 const toggleDiary = (id) => {
@@ -215,11 +237,14 @@ const toggleDiary = (id) => {
   }
 }
 
+// 📌 페이지 로드 시 통계 계산
 onMounted(async () => {
+  console.log('🚀 [insights.vue] 페이지 로드...')
   isLoading.value = true
-  await new Promise(resolve => setTimeout(resolve, 700))
-  calculateStats()
+  await new Promise(resolve => setTimeout(resolve, 500))
+  await calculateStats()
   isLoading.value = false
+  console.log('✅ [insights.vue] 페이지 로드 완료!')
 })
 </script>
 

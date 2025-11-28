@@ -72,12 +72,23 @@
 </template>
 
 <script setup>
+/**
+ * 📝 일기 작성/수정 페이지
+ *
+ * 📌 useDiary 함수들이 이제 백엔드 API를 호출합니다:
+ * - save: POST /api/diaries (새 일기 저장)
+ * - getById: GET /api/diaries/:id (특정 일기 조회)
+ * - update: PUT /api/diaries/:id (일기 수정)
+ *
+ * ⚠️ 중요: 이 함수들은 이제 모두 async 함수입니다!
+ */
 const { save, getById, update } = useDiary()
 const { getRecommendedPrompt } = useAI()
 const { analyzeDiary } = useEmotionAnalysis()
 const router = useRouter()
 const route = useRoute()
 
+// 📌 기분 이모지 매핑
 const moods = {
   happy: '😊',
   calm: '😌',
@@ -196,16 +207,27 @@ const resetMood = () => {
   selectedImages.value = [] // 이미지도 초기화
 }
 
+/**
+ * 💾 일기 저장 함수
+ * - 수정 모드: PUT /api/diaries/:id 호출
+ * - 생성 모드: POST /api/diaries 호출
+ */
 const saveDiary = async () => {
   if (!content.value.trim()) return
 
   try {
+    console.log('💾 [write.vue] 일기 저장 시작...')
+
     // 1. AI 감정 분석 시작
     isAnalyzing.value = true
+    console.log('🧠 [write.vue] AI 감정 분석 중...')
     const analysis = await analyzeDiary(content.value)
+    console.log('🧠 [write.vue] AI 분석 결과:', analysis)
 
     if (editMode.value) {
-      // 수정 모드: 기존 일기 업데이트
+      // 📌 수정 모드: 기존 일기 업데이트 (PUT /api/diaries/:id)
+      console.log('✏️ [write.vue] 수정 모드 - ID:', editingDiaryId.value)
+
       const updatedDiary = {
         content: content.value,
         images: selectedImages.value.map(img => img.id), // 이미지 ID만 저장
@@ -216,12 +238,21 @@ const saveDiary = async () => {
         emotionScore: analysis.score
       }
 
-      update(editingDiaryId.value, updatedDiary)
+      console.log('✏️ [write.vue] 백엔드 API 호출: PUT /api/diaries/' + editingDiaryId.value)
+      // ⚠️ update는 async 함수이므로 await 필요!
+      const result = await update(editingDiaryId.value, updatedDiary)
+      console.log('✅ [write.vue] 수정 완료:', result)
+
     } else {
-      // 생성 모드: 새 일기 저장
+      // 📌 생성 모드: 새 일기 저장 (POST /api/diaries)
+      console.log('📝 [write.vue] 생성 모드 - 새 일기 작성')
+
+      // ⚠️ 백엔드 API 형식에 맞게 데이터 구성
+      // - id는 백엔드에서 자동 생성됨
+      // - date 형식은 YYYY-MM-DD
       const diary = {
-        id: Date.now(),
-        date: new Date().toLocaleDateString('ko-KR'),
+        // id는 백엔드에서 자동 생성
+        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD 형식
         mood: selectedMood.value,
         prompt: currentPrompt.value,
         content: content.value,
@@ -233,45 +264,74 @@ const saveDiary = async () => {
         emotionScore: analysis.score
       }
 
-      save(diary)
+      console.log('📝 [write.vue] 백엔드 API 호출: POST /api/diaries')
+      console.log('📝 [write.vue] 전송할 데이터:', diary)
+
+      // ⚠️ save는 async 함수이므로 await 필요!
+      const result = await save(diary)
+      console.log('✅ [write.vue] 저장 완료:', result)
     }
 
+    console.log('🏠 [write.vue] 홈으로 이동...')
     router.push('/')
+
   } catch (error) {
-    console.error('일기 저장 중 오류:', error)
+    console.error('❌ [write.vue] 일기 저장 중 오류:', error)
     alert('일기를 저장하는 중 오류가 발생했습니다.')
   } finally {
     isAnalyzing.value = false
   }
 }
 
-// 페이지 로드 시 수정 모드 확인
+/**
+ * 🚀 페이지 로드 시 수정 모드 확인
+ * - URL에 ?edit=ID가 있으면 수정 모드로 전환
+ * - 해당 일기 데이터를 백엔드에서 가져옴
+ */
 onMounted(async () => {
   const editId = route.query.edit
 
   if (editId) {
-    // 수정 모드
+    console.log('✏️ [write.vue] 수정 모드 진입 - ID:', editId)
+
+    // 수정 모드 설정
     editMode.value = true
-    editingDiaryId.value = Number(editId)
+    editingDiaryId.value = editId // ID는 이제 문자열로 처리
 
-    const diary = getById(editingDiaryId.value)
+    try {
+      // 📌 백엔드에서 일기 데이터 가져오기 (GET /api/diaries/:id)
+      console.log('✏️ [write.vue] 백엔드 API 호출: GET /api/diaries/' + editId)
 
-    if (diary) {
-      // 기존 일기 데이터 불러오기
-      selectedMood.value = diary.mood
-      currentPrompt.value = diary.prompt
-      content.value = diary.content
+      // ⚠️ getById는 async 함수이므로 await 필요!
+      const diary = await getById(editingDiaryId.value)
 
-      // 이미지 불러오기
-      if (diary.images && diary.images.length > 0) {
-        const { loadMultipleImages } = useImageUpload()
-        selectedImages.value = await loadMultipleImages(diary.images, 'thumbnail')
+      if (diary) {
+        console.log('✅ [write.vue] 일기 불러오기 성공:', diary)
+
+        // 기존 일기 데이터 불러오기
+        selectedMood.value = diary.mood
+        currentPrompt.value = diary.prompt || ''
+        content.value = diary.content
+
+        // 이미지 불러오기 (IndexedDB에서)
+        if (diary.images && diary.images.length > 0) {
+          console.log('🖼️ [write.vue] 이미지 불러오기:', diary.images)
+          const { loadMultipleImages } = useImageUpload()
+          selectedImages.value = await loadMultipleImages(diary.images, 'thumbnail')
+        }
+      } else {
+        // 일기를 찾을 수 없으면 홈으로
+        console.warn('⚠️ [write.vue] 일기를 찾을 수 없습니다.')
+        alert('일기를 찾을 수 없습니다.')
+        router.push('/')
       }
-    } else {
-      // 일기를 찾을 수 없으면 홈으로
-      alert('일기를 찾을 수 없습니다.')
+    } catch (error) {
+      console.error('❌ [write.vue] 일기 불러오기 실패:', error)
+      alert('일기를 불러오는 중 오류가 발생했습니다.')
       router.push('/')
     }
+  } else {
+    console.log('📝 [write.vue] 새 일기 작성 모드')
   }
 })
 </script>

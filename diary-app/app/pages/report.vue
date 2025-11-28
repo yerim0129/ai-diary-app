@@ -148,6 +148,11 @@
 </template>
 
 <script setup>
+/**
+ * 📊 감정 리포트 페이지
+ * - 백엔드 API에서 일기 데이터를 가져와 리포트를 생성합니다
+ * - getAll()은 이제 async 함수입니다 (GET /api/diaries)
+ */
 const { getAll } = useDiary()
 
 const moods = {
@@ -155,7 +160,8 @@ const moods = {
   calm: '😌',
   sad: '😔',
   angry: '😤',
-  tired: '😴'
+  tired: '😴',
+  excited: '🤩'  // 백엔드 샘플 데이터 지원
 }
 
 const moodLabels = {
@@ -189,19 +195,30 @@ const getPercentage = (count, total) => {
   return Math.round((count / total) * 100)
 }
 
-const generateReport = () => {
-  const allDiaries = getAll()
-  const now = new Date()
+/**
+ * 📊 리포트 생성 함수
+ * - 백엔드 API에서 일기 데이터를 가져와 리포트를 생성합니다
+ */
+const generateReport = async () => {
+  console.log('📊 [report.vue] 리포트 생성 시작...')
 
-  // 기간별 일기 필터링
-  let periodDiaries = []
-  if (selectedPeriod.value === 'week') {
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-    periodDiaries = allDiaries.filter(d => new Date(d.date) >= weekAgo)
-  } else {
-    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-    periodDiaries = allDiaries.filter(d => new Date(d.date) >= monthAgo)
-  }
+  try {
+    // 📌 백엔드에서 모든 일기 조회 (GET /api/diaries)
+    console.log('📊 [report.vue] 백엔드 API 호출: GET /api/diaries')
+    const allDiaries = await getAll()
+    console.log(`📊 [report.vue] 총 ${allDiaries.length}개의 일기 조회됨`)
+
+    const now = new Date()
+
+    // 기간별 일기 필터링
+    let periodDiaries = []
+    if (selectedPeriod.value === 'week') {
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      periodDiaries = allDiaries.filter(d => new Date(d.date) >= weekAgo)
+    } else {
+      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+      periodDiaries = allDiaries.filter(d => new Date(d.date) >= monthAgo)
+    }
 
   // 감정 통계
   const moodCounts = {
@@ -236,17 +253,22 @@ const generateReport = () => {
     }
   })
 
-  report.value = {
-    diaries: periodDiaries,
-    moodCounts,
-    topMood,
-    diversity,
-    insights,
-    highlights: highlights.slice(0, 3) // 최대 3개
-  }
+    report.value = {
+      diaries: periodDiaries,
+      moodCounts,
+      topMood,
+      diversity,
+      insights,
+      highlights: highlights.slice(0, 3) // 최대 3개
+    }
 
-  // 감정 추세 분석
-  emotionTrend.value = analyzeEmotionTrend(allDiaries)
+    // 감정 추세 분석
+    emotionTrend.value = analyzeEmotionTrend(allDiaries)
+
+    console.log('✅ [report.vue] 리포트 생성 완료!')
+  } catch (error) {
+    console.error('❌ [report.vue] 리포트 생성 실패:', error)
+  }
 }
 
 const analyzeEmotionTrend = (allDiaries) => {
@@ -403,12 +425,16 @@ const exportReport = () => {
   URL.revokeObjectURL(url)
 }
 
-watch(selectedPeriod, () => {
-  generateReport()
+// 📌 기간 변경 시 리포트 재생성
+watch(selectedPeriod, async () => {
+  console.log('📊 [report.vue] 기간 변경:', selectedPeriod.value)
+  await generateReport()
 })
 
-onMounted(() => {
-  generateReport()
+// 📌 페이지 로드 시 리포트 생성
+onMounted(async () => {
+  console.log('🚀 [report.vue] 페이지 로드...')
+  await generateReport()
 })
 </script>
 

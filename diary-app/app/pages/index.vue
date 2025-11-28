@@ -121,133 +121,208 @@
 </template>
 
 <script setup>
+/**
+ * 📌 useDiary에서 API 호출 함수들을 가져옵니다.
+ * - getAll: GET /api/diaries (전체 일기 조회)
+ * - deleteDiary: DELETE /api/diaries/:id (일기 삭제)
+ *
+ * ⚠️ 중요: 이 함수들은 이제 모두 async 함수입니다!
+ */
 const { getAll, deleteDiary: removeDiary } = useDiary()
 
+// 📌 기분 이모지 매핑
 const moods = {
   happy: '😊',
   calm: '😌',
   sad: '😔',
   angry: '😤',
-  tired: '😴'
+  tired: '😴',
+  excited: '🤩'  // 백엔드 샘플 데이터에 있는 mood 추가
 }
 
+// 📌 기분 한글 라벨 매핑
 const moodLabels = {
   happy: '행복',
   calm: '평온',
   sad: '우울',
   angry: '화남',
-  tired: '피곤'
+  tired: '피곤',
+  excited: '신남'
 }
 
+// 📌 통계 데이터 (반응형)
 const stats = ref({
   streak: 0,
   thisMonth: 0,
   achievement: 0
 })
 
+// 📌 최근 일기 목록 (반응형)
 const recentDiaries = ref([])
+
+// 📌 선택된 일기 (모달에서 사용)
 const selectedDiary = ref(null)
+
+// 📌 로딩 상태
 const isLoading = ref(true)
 
+// 📌 기분 이모지 반환 함수
 const getMoodEmoji = (mood) => moods[mood] || '😊'
+
+// 📌 기분 라벨 반환 함수
 const getMoodLabel = (mood) => moodLabels[mood] || mood
 
+// 📌 일기 모달 열기
 const openDiary = (diary) => {
+  console.log('📖 [index.vue] 일기 모달 열기:', diary.id)
   selectedDiary.value = diary
 }
 
+// 📌 일기 모달 닫기
 const closeDiary = () => {
+  console.log('📖 [index.vue] 일기 모달 닫기')
   selectedDiary.value = null
 }
 
+// 📌 일기 수정 페이지로 이동
 const editDiary = () => {
   if (!selectedDiary.value) return
+  console.log('✏️ [index.vue] 일기 수정 페이지로 이동:', selectedDiary.value.id)
   navigateTo(`/write?edit=${selectedDiary.value.id}`)
 }
 
+/**
+ * 🗑️ 일기 삭제 함수
+ * - 이제 백엔드 API를 호출합니다 (DELETE /api/diaries/:id)
+ */
 const deleteDiary = async () => {
   if (!selectedDiary.value) return
 
   if (confirm('정말로 이 일기를 삭제하시겠습니까?')) {
+    console.log('🗑️ [index.vue] 일기 삭제 시작...')
+
     try {
       const diary = selectedDiary.value
 
-      // 1. 첨부된 이미지 먼저 삭제
+      // 1. 첨부된 이미지 먼저 삭제 (IndexedDB에서)
       if (diary.images && diary.images.length > 0) {
+        console.log('🖼️ [index.vue] 첨부 이미지 삭제 중...', diary.images)
         const { deleteImages } = useImageDB()
         await deleteImages(diary.images)
       }
 
-      // 2. 일기 데이터 삭제 (useDiary 사용)
-      removeDiary(diary.id)
+      // 2. 📌 일기 데이터 삭제 (백엔드 API 호출)
+      // ⚠️ removeDiary는 이제 async 함수이므로 await 필요!
+      console.log('🗑️ [index.vue] 백엔드 API 호출: DELETE /api/diaries/' + diary.id)
+      await removeDiary(diary.id)
+
+      console.log('✅ [index.vue] 일기 삭제 완료!')
 
       // 3. 상태 업데이트
       closeDiary()
-      calculateStats()
+
+      // 📌 삭제 후 통계 다시 계산 (API 재호출)
+      await calculateStats()
+
     } catch (error) {
-      console.error('일기 삭제 중 오류:', error)
+      console.error('❌ [index.vue] 일기 삭제 중 오류:', error)
       alert('일기를 삭제하는 중 오류가 발생했습니다.')
     }
   }
 }
 
-const calculateStats = () => {
-  const diaries = getAll()
-  const today = new Date()
-  const currentMonth = today.getMonth()
-  const currentYear = today.getFullYear()
+/**
+ * 📊 통계 계산 함수
+ * - 이제 백엔드 API를 호출합니다 (GET /api/diaries)
+ *
+ * ⚠️ 중요: getAll()이 이제 async 함수이므로 await 필요!
+ */
+const calculateStats = async () => {
+  console.log('📊 [index.vue] 통계 계산 시작...')
 
-  // 이번 달 일기 수
-  const thisMonthDiaries = diaries.filter(d => {
-    const diaryDate = new Date(d.date)
-    return diaryDate.getMonth() === currentMonth && diaryDate.getFullYear() === currentYear
-  })
-  stats.value.thisMonth = thisMonthDiaries.length
+  try {
+    // 📌 백엔드에서 모든 일기 조회 (API 호출)
+    console.log('📊 [index.vue] 백엔드 API 호출: GET /api/diaries')
+    const diaries = await getAll()
 
-  // 연속 작성일 계산
-  let streak = 0
-  const sortedDiaries = [...diaries].sort((a, b) => new Date(b.date) - new Date(a.date))
+    console.log(`📊 [index.vue] 총 ${diaries.length}개의 일기를 받아왔습니다.`)
 
-  if (sortedDiaries.length > 0) {
-    const todayStr = today.toLocaleDateString('ko-KR')
-    const lastDiaryDate = new Date(sortedDiaries[0].date).toLocaleDateString('ko-KR')
+    const today = new Date()
+    const currentMonth = today.getMonth()
+    const currentYear = today.getFullYear()
 
-    if (todayStr === lastDiaryDate) {
-      streak = 1
-      for (let i = 1; i < sortedDiaries.length; i++) {
-        const prevDate = new Date(sortedDiaries[i - 1].date)
-        const currDate = new Date(sortedDiaries[i].date)
-        const diffTime = Math.abs(prevDate - currDate)
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    // 📌 이번 달 일기 수 계산
+    const thisMonthDiaries = diaries.filter(d => {
+      const diaryDate = new Date(d.date)
+      return diaryDate.getMonth() === currentMonth && diaryDate.getFullYear() === currentYear
+    })
+    stats.value.thisMonth = thisMonthDiaries.length
+    console.log(`📊 [index.vue] 이번 달 일기: ${thisMonthDiaries.length}개`)
 
-        if (diffDays === 1) {
-          streak++
-        } else {
-          break
+    // 📌 연속 작성일 계산
+    let streak = 0
+    const sortedDiaries = [...diaries].sort((a, b) => new Date(b.date) - new Date(a.date))
+
+    if (sortedDiaries.length > 0) {
+      const todayStr = today.toLocaleDateString('ko-KR')
+      const lastDiaryDate = new Date(sortedDiaries[0].date).toLocaleDateString('ko-KR')
+
+      if (todayStr === lastDiaryDate) {
+        streak = 1
+        for (let i = 1; i < sortedDiaries.length; i++) {
+          const prevDate = new Date(sortedDiaries[i - 1].date)
+          const currDate = new Date(sortedDiaries[i].date)
+          const diffTime = Math.abs(prevDate - currDate)
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+          if (diffDays === 1) {
+            streak++
+          } else {
+            break
+          }
         }
       }
     }
+    stats.value.streak = streak
+    console.log(`📊 [index.vue] 연속 작성일: ${streak}일`)
+
+    // 📌 달성률 계산 (이번 달 일수 대비)
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+    stats.value.achievement = Math.min(100, Math.round((thisMonthDiaries.length / daysInMonth) * 100))
+    console.log(`📊 [index.vue] 달성률: ${stats.value.achievement}%`)
+
+    // 📌 최근 일기 3개 저장
+    recentDiaries.value = sortedDiaries.slice(0, 3)
+    console.log(`📊 [index.vue] 최근 일기 ${recentDiaries.value.length}개 표시`)
+
+  } catch (error) {
+    console.error('❌ [index.vue] 통계 계산 중 오류:', error)
+    // 에러 발생 시 기본값 유지
+    recentDiaries.value = []
   }
-  stats.value.streak = streak
-
-  // 달성률 (이번 달 일수 대비)
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
-  stats.value.achievement = Math.min(100, Math.round((thisMonthDiaries.length / daysInMonth) * 100))
-
-  // 최근 일기 3개
-  recentDiaries.value = sortedDiaries.slice(0, 3)
 }
 
+/**
+ * 🚀 컴포넌트 마운트 시 실행
+ * - 백엔드에서 데이터를 가져와 통계를 계산합니다
+ */
 onMounted(async () => {
-  // 로딩 시뮬레이션 (실제 데이터 로드)
+  console.log('🚀 [index.vue] 페이지 로드 시작...')
+
+  // 로딩 상태 시작
   isLoading.value = true
 
-  // 최소 로딩 시간 보장 (UX 개선)
-  await new Promise(resolve => setTimeout(resolve, 800))
+  // 📌 최소 로딩 시간 보장 (UX 개선 - 너무 빠르면 깜빡임)
+  await new Promise(resolve => setTimeout(resolve, 500))
 
-  calculateStats()
+  // 📌 백엔드에서 데이터 가져오기 및 통계 계산
+  await calculateStats()
+
+  // 로딩 완료
   isLoading.value = false
+  console.log('✅ [index.vue] 페이지 로드 완료!')
 })
+
 </script>
 
 <style scoped>
