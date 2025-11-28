@@ -18,7 +18,7 @@
           <div class="stat-label">연속 작성</div>
           <div class="stat-value">{{ stats.streak }}일</div>
         </NuxtLink>
-        <NuxtLink to="/calendar" class="stat-card">
+        <NuxtLink to="/insights?filter=thisMonth" class="stat-card">
           <div class="stat-icon">📖</div>
           <div class="stat-label">이번 달</div>
           <div class="stat-value">{{ stats.thisMonth }}개</div>

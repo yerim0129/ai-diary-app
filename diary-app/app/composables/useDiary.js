@@ -100,6 +100,7 @@ export const useDiary = () => {
    * @param {Object} options - 조회 옵션
    * @param {number} options.limit - 최대 조회 개수
    * @param {string} options.mood - 기분 필터
+   * @param {string} options.search - 🔍 검색어 (일기 내용, 프롬프트, 날짜에서 검색)
    * @returns {Array} 일기 배열 (에러 시 빈 배열)
    */
   const getAll = async (options = {}) => {
@@ -111,6 +112,7 @@ export const useDiary = () => {
       const queryParams = new URLSearchParams()
       if (options.limit) queryParams.append('limit', options.limit)
       if (options.mood) queryParams.append('mood', options.mood)
+      if (options.search) queryParams.append('search', options.search)  // 🔍 검색어 추가
 
       const queryString = queryParams.toString()
       const url = queryString ? `/api/diaries?${queryString}` : '/api/diaries'
