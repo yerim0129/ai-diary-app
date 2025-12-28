@@ -1,25 +1,53 @@
 /**
  * 🧠 감정 분석 Composable
- * Hugging Face API를 사용해서 일기 내용의 감정을 분석합니다
+ * Gemini API 우선, 실패시 로컬 키워드 분석으로 폴백
  */
 export const useEmotionAnalysis = () => {
   /**
    * 📊 Step 1: AI 감정 분석
-   * 한국어 키워드 기반 감정 분석 엔진
+   * Gemini LLM 기반 감정 분석 (폴백: 키워드 분석)
    * @param {string} text - 분석할 일기 내용
    * @returns {Promise<Object>} 분석 결과
    */
   const analyzeDiary = async (text) => {
-    console.log('🧠 AI 감정 분석 시작...')
+    console.log('🧠 AI 감정 분석 시작... 텍스트 길이:', text?.length)
 
-    // 약간의 딜레이로 로딩 UX 개선 (실제 분석 중인 것처럼)
-    await new Promise(resolve => setTimeout(resolve, 800))
+    // 1. Gemini LLM 분석 시도
+    try {
+      console.log('🤖 Gemini API 호출 중...')
+      const response = await $fetch('/api/ai/analyze', {
+        method: 'POST',
+        body: { text }
+      })
+      console.log('🤖 Gemini API 응답:', JSON.stringify(response))
 
-    // 로컬 키워드 기반 분석 (안정적)
+      if (response.success && response.data?.emotion) {
+        console.log('✅ Gemini 분석 성공:', response.data)
+        const result = {
+          emotion: response.data.emotion,
+          keywords: response.data.keywords || [],
+          feedback: response.data.feedback || '',
+          advice: response.data.advice || '',
+          score: 85, // LLM 분석은 높은 신뢰도
+          source: 'gemini'
+        }
+        console.log('✅ 반환할 결과:', JSON.stringify(result))
+        return result
+      } else {
+        console.warn('⚠️ Gemini 응답에 emotion 없음:', response)
+      }
+    } catch (e) {
+      console.error('❌ Gemini 분석 실패:', e)
+      console.warn('⚠️ Gemini 분석 실패, 로컬 분석으로 폴백:', e.message || e)
+    }
+
+    // 2. 폴백: 로컬 키워드 분석
     const result = analyzeLocally(text)
-
-    console.log('✅ 감정 분석 완료:', result)
-    return result
+    console.log('✅ 로컬 분석 완료:', result)
+    return {
+      ...result,
+      source: 'local'
+    }
   }
 
   /**

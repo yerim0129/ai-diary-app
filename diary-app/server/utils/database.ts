@@ -81,6 +81,36 @@ db.exec(createTableSQL)
 console.log('✅ [Database] diaries 테이블 준비 완료!')
 
 // ============================================
+// 📋 마이그레이션: 새 컬럼 추가
+// ============================================
+
+/**
+ * 📌 advice, aiSource 컬럼 추가 (AI 분석용)
+ * 기존 테이블에 컬럼이 없으면 추가
+ */
+try {
+  // advice 컬럼 추가
+  db.exec('ALTER TABLE diaries ADD COLUMN advice TEXT')
+  console.log('✅ [Database] advice 컬럼 추가됨')
+} catch (e: any) {
+  // 이미 컬럼이 있으면 에러 무시
+  if (!e.message.includes('duplicate column')) {
+    console.log('📌 [Database] advice 컬럼 이미 존재')
+  }
+}
+
+try {
+  // aiSource 컬럼 추가
+  db.exec('ALTER TABLE diaries ADD COLUMN aiSource TEXT')
+  console.log('✅ [Database] aiSource 컬럼 추가됨')
+} catch (e: any) {
+  // 이미 컬럼이 있으면 에러 무시
+  if (!e.message.includes('duplicate column')) {
+    console.log('📌 [Database] aiSource 컬럼 이미 존재')
+  }
+}
+
+// ============================================
 // 📦 DB 객체 내보내기
 // ============================================
 

@@ -26,6 +26,8 @@ export interface Diary {
   emotionScore?: number
   keywords?: string[]
   feedback?: string
+  advice?: string
+  aiSource?: string
   createdAt: string
   updatedAt?: string
 }
@@ -41,6 +43,8 @@ export interface CreateDiaryRequest {
   emotionScore?: number
   keywords?: string[]
   feedback?: string
+  advice?: string
+  aiSource?: string
 }
 
 /** 일기 수정 요청 타입 (PUT 요청 body) */
@@ -54,6 +58,8 @@ export interface UpdateDiaryRequest {
   emotionScore?: number
   keywords?: string[]
   feedback?: string
+  advice?: string
+  aiSource?: string
 }
 
 /** API 응답 기본 타입 */
@@ -81,6 +87,8 @@ interface DiaryRow {
   emotionScore: number | null
   keywords: string
   feedback: string | null
+  advice: string | null
+  aiSource: string | null
   createdAt: string
   updatedAt: string | null
 }
@@ -101,6 +109,8 @@ function rowToDiary(row: DiaryRow): Diary {
     emotionScore: row.emotionScore || undefined,
     keywords: JSON.parse(row.keywords || '[]'),
     feedback: row.feedback || undefined,
+    advice: row.advice || undefined,
+    aiSource: row.aiSource || undefined,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt || undefined
   }
@@ -152,10 +162,11 @@ export function getDiaryById(id: string): Diary | undefined {
 export function saveDiary(diary: Diary): Diary {
   console.log(`💾 [DiaryStore] 일기 저장: ID=${diary.id}`)
   console.log(`💾 [DiaryStore] 내용 길이: ${diary.content.length}자`)
+  console.log(`💾 [DiaryStore] AI 분석: emotion=${diary.emotion}, aiSource=${diary.aiSource}`)
 
   const stmt = db.prepare(`
-    INSERT INTO diaries (id, content, mood, date, images, prompt, emotion, emotionScore, keywords, feedback, createdAt, updatedAt)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO diaries (id, content, mood, date, images, prompt, emotion, emotionScore, keywords, feedback, advice, aiSource, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `)
 
   stmt.run(
@@ -169,6 +180,8 @@ export function saveDiary(diary: Diary): Diary {
     diary.emotionScore || null,
     JSON.stringify(diary.keywords || []),
     diary.feedback || null,
+    diary.advice || null,
+    diary.aiSource || null,
     diary.createdAt,
     diary.updatedAt || null
   )
@@ -205,13 +218,15 @@ export function updateDiary(id: string, updates: UpdateDiaryRequest): Diary | un
     emotionScore: updates.emotionScore !== undefined ? updates.emotionScore : existing.emotionScore,
     keywords: updates.keywords !== undefined ? updates.keywords : existing.keywords,
     feedback: updates.feedback !== undefined ? updates.feedback : existing.feedback,
+    advice: updates.advice !== undefined ? updates.advice : existing.advice,
+    aiSource: updates.aiSource !== undefined ? updates.aiSource : existing.aiSource,
     updatedAt: new Date().toISOString()
   }
 
   const stmt = db.prepare(`
     UPDATE diaries
     SET content = ?, mood = ?, date = ?, images = ?, prompt = ?,
-        emotion = ?, emotionScore = ?, keywords = ?, feedback = ?, updatedAt = ?
+        emotion = ?, emotionScore = ?, keywords = ?, feedback = ?, advice = ?, aiSource = ?, updatedAt = ?
     WHERE id = ?
   `)
 
@@ -225,6 +240,8 @@ export function updateDiary(id: string, updates: UpdateDiaryRequest): Diary | un
     updated.emotionScore || null,
     JSON.stringify(updated.keywords || []),
     updated.feedback || null,
+    updated.advice || null,
+    updated.aiSource || null,
     updated.updatedAt,
     id
   )

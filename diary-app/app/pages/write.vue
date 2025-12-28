@@ -63,8 +63,8 @@
 
         <!-- AI 분석 로딩 메시지 -->
         <div v-if="isAnalyzing" class="analyzing-message">
-          <span class="loading-icon">🧠</span>
-          <span>AI가 감정을 분석하고 있어요...</span>
+          <span class="loading-icon">🤖</span>
+          <span>Gemini AI가 일기를 분석하고 있어요...</span>
         </div>
       </div>
     </div>
@@ -174,11 +174,11 @@ const getMoodLabel = (mood) => {
   return labels[mood]
 }
 
-const selectMood = (mood) => {
+const selectMood = async (mood) => {
   selectedMood.value = mood
 
-  // AI 추천 프롬프트 생성
-  aiPrompt.value = getRecommendedPrompt(mood)
+  // AI 추천 프롬프트 생성 (async 함수이므로 await 필요)
+  aiPrompt.value = await getRecommendedPrompt(mood)
 
   // 기본 랜덤 프롬프트
   const moodPrompts = prompts[mood]
@@ -235,7 +235,9 @@ const saveDiary = async () => {
         emotion: analysis.emotion,
         keywords: analysis.keywords,
         feedback: analysis.feedback,
-        emotionScore: analysis.score
+        advice: analysis.advice || '',
+        emotionScore: analysis.score,
+        aiSource: analysis.source || 'local' // gemini 또는 local
       }
 
       console.log('✏️ [write.vue] 백엔드 API 호출: PUT /api/diaries/' + editingDiaryId.value)
@@ -261,7 +263,9 @@ const saveDiary = async () => {
         emotion: analysis.emotion,
         keywords: analysis.keywords,
         feedback: analysis.feedback,
-        emotionScore: analysis.score
+        advice: analysis.advice || '',
+        emotionScore: analysis.score,
+        aiSource: analysis.source || 'local' // gemini 또는 local
       }
 
       console.log('📝 [write.vue] 백엔드 API 호출: POST /api/diaries')

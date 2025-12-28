@@ -75,7 +75,14 @@ export const useDiary = () => {
           mood: diary.mood,
           date: diary.date,
           images: diary.images || [],
-          prompt: diary.prompt
+          prompt: diary.prompt,
+          // AI 분석 결과
+          emotion: diary.emotion,
+          emotionScore: diary.emotionScore,
+          keywords: diary.keywords || [],
+          feedback: diary.feedback,
+          advice: diary.advice,
+          aiSource: diary.aiSource
         }
       })
 

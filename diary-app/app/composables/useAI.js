@@ -2,8 +2,8 @@ export const useAI = () => {
   const { getAll } = useDiary()
 
   // AI 추천 프롬프트 생성
-  const getRecommendedPrompt = (currentMood) => {
-    const allDiaries = getAll()
+  const getRecommendedPrompt = async (currentMood) => {
+    const allDiaries = await getAll()
 
     if (allDiaries.length === 0) {
       // 첫 일기일 경우 기본 환영 프롬프트

@@ -61,7 +61,7 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // 5. 새 일기 객체 생성
+    // 5. 새 일기 객체 생성 (AI 분석 결과 포함)
     const newDiary: Diary = {
       id: Date.now().toString(), // 고유 ID 자동 생성
       content: body.content.trim(),
@@ -69,6 +69,13 @@ export default defineEventHandler(async (event) => {
       date: body.date,
       images: body.images || [],
       prompt: body.prompt || undefined,
+      // AI 분석 결과
+      emotion: body.emotion || undefined,
+      emotionScore: body.emotionScore || undefined,
+      keywords: body.keywords || [],
+      feedback: body.feedback || undefined,
+      advice: body.advice || undefined,
+      aiSource: body.aiSource || undefined,
       createdAt: new Date().toISOString()
     }
 

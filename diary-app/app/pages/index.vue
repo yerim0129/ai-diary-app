@@ -75,7 +75,11 @@
 
           <!-- AI 분석 결과 -->
           <div v-if="selectedDiary.emotion" class="ai-analysis">
-            <div class="analysis-header">🧠 AI 감정 분석</div>
+            <div class="analysis-header">
+              <span>🤖 AI 감정 분석</span>
+              <span v-if="selectedDiary.aiSource === 'gemini'" class="ai-badge gemini">Gemini</span>
+              <span v-else class="ai-badge local">Local</span>
+            </div>
             <div class="analysis-content">
               <div class="analysis-item">
                 <span class="analysis-label">감정:</span>
@@ -95,6 +99,10 @@
               <div class="analysis-item" v-if="selectedDiary.feedback">
                 <span class="analysis-label">피드백:</span>
                 <span class="analysis-value feedback-text">{{ selectedDiary.feedback }}</span>
+              </div>
+              <div class="analysis-item advice-item" v-if="selectedDiary.advice">
+                <span class="analysis-label">💡 조언:</span>
+                <span class="analysis-value advice-text">{{ selectedDiary.advice }}</span>
               </div>
             </div>
           </div>
@@ -653,6 +661,37 @@ onMounted(async () => {
 .feedback-text {
   line-height: 1.6;
   font-style: italic;
+}
+
+.advice-item {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.advice-text {
+  line-height: 1.6;
+  color: #92400e;
+  font-weight: 500;
+}
+
+.ai-badge {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.ai-badge.gemini {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.ai-badge.local {
+  background: #e5e7eb;
+  color: #6b7280;
 }
 
 .modal-actions {
