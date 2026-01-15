@@ -3,105 +3,158 @@
   <CalendarSkeleton v-if="isLoading" />
 
   <!-- 실제 컨텐츠 -->
-  <div v-else class="container">
-    <div class="content">
+  <div v-else class="calendar-container">
+    <div class="calendar-content">
       <!-- 헤더 -->
-      <div class="header">
-        <NuxtLink to="/" class="back-btn">← 홈으로</NuxtLink>
-        <h1 class="title">일기 캘린더</h1>
-        <p class="subtitle">나의 감정 여정을 한눈에</p>
-      </div>
+      <header class="page-header animate-fade-in-up">
+        <NuxtLink to="/" class="back-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          홈으로
+        </NuxtLink>
+        <div class="header-text">
+          <h1 class="page-title">일기 캘린더</h1>
+          <p class="page-subtitle">나의 감정 여정을 한눈에</p>
+        </div>
+      </header>
 
       <!-- 월 선택 -->
-      <div class="month-selector">
-        <button @click="previousMonth" class="month-btn">
-          ←
+      <div class="month-nav animate-fade-in-up stagger-1">
+        <button @click="previousMonth" class="nav-btn" aria-label="이전 달">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
         </button>
         <h2 class="current-month">{{ currentMonthText }}</h2>
-        <button @click="nextMonth" class="month-btn">
-          →
+        <button @click="nextMonth" class="nav-btn" aria-label="다음 달">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
         </button>
       </div>
 
       <!-- 캘린더 -->
-      <div class="calendar-card">
+      <div class="calendar-card animate-fade-in-up stagger-2">
         <!-- 요일 헤더 -->
         <div class="weekday-header">
-          <div v-for="day in weekdays" :key="day" class="weekday">
+          <div v-for="day in weekdays" :key="day" class="weekday" :class="{ 'weekend': day === '일' || day === '토' }">
             {{ day }}
           </div>
         </div>
 
         <!-- 날짜 그리드 -->
         <div class="calendar-grid">
-          <div
+          <button
             v-for="(day, index) in calendarDays"
             :key="index"
             class="calendar-day"
             :class="{
               'other-month': day.isOtherMonth,
               'today': day.isToday,
-              'has-diary': day.diary
+              'has-diary': day.diary,
+              [`mood-${day.diary?.mood}`]: day.diary
             }"
+            :disabled="!day.diary"
             @click="day.diary && openDiary(day.diary)"
           >
-            <div class="day-number">{{ day.date }}</div>
-            <div v-if="day.diary" class="day-emoji">
+            <span class="day-number">{{ day.date }}</span>
+            <span v-if="day.diary" class="day-emoji">
               {{ getMoodEmoji(day.diary.mood) }}
-            </div>
-          </div>
+            </span>
+            <div v-if="day.isToday" class="today-indicator"></div>
+          </button>
         </div>
       </div>
 
-      <!-- 통계 요약 -->
-      <div class="calendar-stats">
+      <!-- 월간 통계 -->
+      <div class="stats-card animate-fade-in-up stagger-3">
         <div class="stat-item">
-          <span class="stat-label">이번 달 일기</span>
-          <span class="stat-value">{{ monthlyStats.total }}개</span>
+          <span class="stat-icon">📝</span>
+          <div class="stat-info">
+            <span class="stat-value">{{ monthlyStats.total }}</span>
+            <span class="stat-label">이번 달 일기</span>
+          </div>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-          <span class="stat-label">가장 많은 감정</span>
-          <span class="stat-value">{{ monthlyStats.topMood }}</span>
+          <span class="stat-icon">{{ monthlyStats.topEmoji }}</span>
+          <div class="stat-info">
+            <span class="stat-value">{{ monthlyStats.topMoodLabel }}</span>
+            <span class="stat-label">가장 많은 감정</span>
+          </div>
         </div>
       </div>
 
-      <!-- 일기 모달 -->
-      <div v-if="selectedDiary" class="modal-overlay" @click="closeDiary">
-        <div class="modal-content" @click.stop>
-          <button @click="closeDiary" class="modal-close">✕</button>
-          <div class="modal-header">
-            <span class="modal-emoji">{{ getMoodEmoji(selectedDiary.mood) }}</span>
-            <span class="modal-date">{{ selectedDiary.date }}</span>
-          </div>
-          <p class="modal-prompt">{{ selectedDiary.prompt }}</p>
-          <div class="modal-body">
-            {{ selectedDiary.content }}
-          </div>
-
-          <!-- 이미지 갤러리 -->
-          <ImageGallery v-if="selectedDiary.images && selectedDiary.images.length > 0" :imageIds="selectedDiary.images" />
-
-          <div class="modal-actions">
-            <button @click="editDiary" class="modal-edit">
-              ✏️ 수정하기
-            </button>
-            <button @click="deleteDiary" class="modal-delete">
-              🗑️ 삭제하기
-            </button>
+      <!-- 감정 범례 -->
+      <div class="legend-card animate-fade-in-up stagger-4">
+        <span class="legend-title">감정 범례</span>
+        <div class="legend-items">
+          <div v-for="(emoji, mood) in moods" :key="mood" class="legend-item">
+            <span class="legend-emoji">{{ emoji }}</span>
+            <span class="legend-label">{{ getMoodLabel(mood) }}</span>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- 일기 모달 -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="selectedDiary" class="modal-overlay" @click="closeDiary">
+          <div class="modal-container" @click.stop>
+            <div class="modal-card" :style="{ '--emotion-color': getEmotionColor(selectedDiary.mood) }">
+              <div class="modal-header">
+                <div class="modal-emotion">
+                  <span class="modal-emoji">{{ getMoodEmoji(selectedDiary.mood) }}</span>
+                  <div class="modal-meta">
+                    <span class="modal-date">{{ formatDate(selectedDiary.date) }}</span>
+                    <span class="modal-mood">{{ getMoodLabel(selectedDiary.mood) }}</span>
+                  </div>
+                </div>
+                <button class="modal-close" @click="closeDiary">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div v-if="selectedDiary.prompt" class="modal-prompt">
+                <span class="prompt-icon">💭</span>
+                {{ selectedDiary.prompt }}
+              </div>
+
+              <div class="modal-body">
+                {{ selectedDiary.content }}
+              </div>
+
+              <ImageGallery v-if="selectedDiary.images && selectedDiary.images.length > 0" :imageIds="selectedDiary.images" />
+
+              <div class="modal-actions">
+                <button class="action-btn action-edit" @click="editDiary">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  수정하기
+                </button>
+                <button class="action-btn action-delete" @click="deleteDiary">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                  삭제하기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-/**
- * 📅 일기 캘린더 페이지
- * - 백엔드 API에서 일기 데이터를 가져와 캘린더를 표시합니다
- * - getAll()과 deleteDiary()는 이제 async 함수입니다
- */
 const { getAll, deleteDiary: removeDiary } = useDiary()
 
 const weekdays = ['일', '월', '화', '수', '목', '금', '토']
@@ -111,16 +164,23 @@ const moods = {
   calm: '😌',
   sad: '😔',
   angry: '😤',
-  tired: '😴',
-  excited: '🤩'  // 백엔드 샘플 데이터 지원
+  tired: '😴'
 }
 
 const moodLabels = {
-  happy: '😊 행복',
-  calm: '😌 평온',
-  sad: '😔 우울',
-  angry: '😤 화남',
-  tired: '😴 피곤'
+  happy: '행복',
+  calm: '평온',
+  sad: '우울',
+  angry: '화남',
+  tired: '피곤'
+}
+
+const emotionColors = {
+  happy: 'var(--emotion-happy)',
+  calm: 'var(--emotion-calm)',
+  sad: 'var(--emotion-sad)',
+  angry: 'var(--emotion-angry)',
+  tired: 'var(--emotion-tired)'
 }
 
 const currentDate = ref(new Date())
@@ -129,7 +189,9 @@ const selectedDiary = ref(null)
 const isLoading = ref(true)
 const monthlyStats = ref({
   total: 0,
-  topMood: '-'
+  topMood: '-',
+  topMoodLabel: '-',
+  topEmoji: '📊'
 })
 
 const currentMonthText = computed(() => {
@@ -139,68 +201,56 @@ const currentMonthText = computed(() => {
 })
 
 const getMoodEmoji = (mood) => moods[mood] || '😊'
+const getMoodLabel = (mood) => moodLabels[mood] || mood
+const getEmotionColor = (mood) => emotionColors[mood] || 'var(--accent)'
 
-/**
- * 📅 캘린더 생성 함수
- * - 백엔드 API에서 일기 데이터를 가져와 캘린더를 생성합니다
- */
+const formatDate = (dateStr) => {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+}
+
 const generateCalendar = async () => {
-  console.log('📅 [calendar.vue] 캘린더 생성 시작...')
-
   try {
     const year = currentDate.value.getFullYear()
     const month = currentDate.value.getMonth()
 
-    // 이번 달 첫날과 마지막 날
     const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
-
-    // 캘린더 시작일 (이전 달 날짜 포함)
     const startDay = new Date(firstDay)
     startDay.setDate(startDay.getDate() - firstDay.getDay())
 
-    // 📌 백엔드에서 모든 일기 가져오기 (GET /api/diaries)
-    console.log('📅 [calendar.vue] 백엔드 API 호출: GET /api/diaries')
     const allDiaries = await getAll()
-    console.log(`📅 [calendar.vue] 총 ${allDiaries.length}개의 일기 조회됨`)
 
     const diaryMap = {}
-
-  allDiaries.forEach(diary => {
-    const diaryDate = new Date(diary.date)
-    const key = `${diaryDate.getFullYear()}-${diaryDate.getMonth() + 1}-${diaryDate.getDate()}`
-    diaryMap[key] = diary
-  })
-
-  // 캘린더 날짜 생성 (6주)
-  const days = []
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  for (let i = 0; i < 42; i++) {
-    const date = new Date(startDay)
-    date.setDate(date.getDate() + i)
-
-    const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
-    const diary = diaryMap[dateKey]
-
-    days.push({
-      date: date.getDate(),
-      fullDate: new Date(date),
-      isOtherMonth: date.getMonth() !== month,
-      isToday: date.getTime() === today.getTime(),
-      diary: diary
+    allDiaries.forEach(diary => {
+      const diaryDate = new Date(diary.date)
+      const key = `${diaryDate.getFullYear()}-${diaryDate.getMonth() + 1}-${diaryDate.getDate()}`
+      diaryMap[key] = diary
     })
-  }
+
+    const days = []
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    for (let i = 0; i < 42; i++) {
+      const date = new Date(startDay)
+      date.setDate(date.getDate() + i)
+
+      const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
+      const diary = diaryMap[dateKey]
+
+      days.push({
+        date: date.getDate(),
+        fullDate: new Date(date),
+        isOtherMonth: date.getMonth() !== month,
+        isToday: date.getTime() === today.getTime(),
+        diary: diary
+      })
+    }
 
     calendarDays.value = days
-
-    // 월간 통계 계산
     calculateMonthlyStats(allDiaries, year, month)
-
-    console.log('✅ [calendar.vue] 캘린더 생성 완료!')
   } catch (error) {
-    console.error('❌ [calendar.vue] 캘린더 생성 실패:', error)
+    console.error('캘린더 생성 실패:', error)
   }
 }
 
@@ -212,7 +262,6 @@ const calculateMonthlyStats = (allDiaries, year, month) => {
 
   monthlyStats.value.total = thisMonthDiaries.length
 
-  // 가장 많은 감정 찾기
   if (thisMonthDiaries.length > 0) {
     const moodCounts = {}
     thisMonthDiaries.forEach(d => {
@@ -223,15 +272,17 @@ const calculateMonthlyStats = (allDiaries, year, month) => {
       moodCounts[a] > moodCounts[b] ? a : b
     )
 
-    monthlyStats.value.topMood = moodLabels[topMood] || '-'
+    monthlyStats.value.topMood = topMood
+    monthlyStats.value.topMoodLabel = moodLabels[topMood] || '-'
+    monthlyStats.value.topEmoji = moods[topMood] || '📊'
   } else {
     monthlyStats.value.topMood = '-'
+    monthlyStats.value.topMoodLabel = '-'
+    monthlyStats.value.topEmoji = '📊'
   }
 }
 
-// 📌 이전 달로 이동
 const previousMonth = async () => {
-  console.log('📅 [calendar.vue] 이전 달로 이동')
   currentDate.value = new Date(
     currentDate.value.getFullYear(),
     currentDate.value.getMonth() - 1,
@@ -240,9 +291,7 @@ const previousMonth = async () => {
   await generateCalendar()
 }
 
-// 📌 다음 달로 이동
 const nextMonth = async () => {
-  console.log('📅 [calendar.vue] 다음 달로 이동')
   currentDate.value = new Date(
     currentDate.value.getFullYear(),
     currentDate.value.getMonth() + 1,
@@ -253,10 +302,12 @@ const nextMonth = async () => {
 
 const openDiary = (diary) => {
   selectedDiary.value = diary
+  document.body.style.overflow = 'hidden'
 }
 
 const closeDiary = () => {
   selectedDiary.value = null
+  document.body.style.overflow = ''
 }
 
 const editDiary = () => {
@@ -264,168 +315,164 @@ const editDiary = () => {
   navigateTo(`/write?edit=${selectedDiary.value.id}`)
 }
 
-/**
- * 🗑️ 일기 삭제 함수
- * - 백엔드 API를 호출하여 일기를 삭제합니다 (DELETE /api/diaries/:id)
- */
 const deleteDiary = async () => {
   if (!selectedDiary.value) return
 
   if (confirm('정말로 이 일기를 삭제하시겠습니까?')) {
-    console.log('🗑️ [calendar.vue] 일기 삭제 시작...')
-
     try {
       const diary = selectedDiary.value
 
-      // 1. 첨부된 이미지 먼저 삭제 (IndexedDB에서)
       if (diary.images && diary.images.length > 0) {
-        console.log('🖼️ [calendar.vue] 첨부 이미지 삭제 중...', diary.images)
         const { deleteImages } = useImageDB()
         await deleteImages(diary.images)
       }
 
-      // 2. 📌 일기 데이터 삭제 (백엔드 API 호출)
-      console.log('🗑️ [calendar.vue] 백엔드 API 호출: DELETE /api/diaries/' + diary.id)
       await removeDiary(diary.id)
-      console.log('✅ [calendar.vue] 일기 삭제 완료!')
-
-      // 3. 상태 업데이트
       closeDiary()
-      await generateCalendar() // 캘린더 다시 생성
+      await generateCalendar()
     } catch (error) {
-      console.error('❌ [calendar.vue] 일기 삭제 중 오류:', error)
+      console.error('일기 삭제 오류:', error)
       alert('일기를 삭제하는 중 오류가 발생했습니다.')
     }
   }
 }
 
-// 📌 페이지 로드 시 캘린더 생성
 onMounted(async () => {
-  console.log('🚀 [calendar.vue] 페이지 로드...')
   isLoading.value = true
-  await new Promise(resolve => setTimeout(resolve, 500))
+  await new Promise(resolve => setTimeout(resolve, 400))
   await generateCalendar()
   isLoading.value = false
-  console.log('✅ [calendar.vue] 페이지 로드 완료!')
 })
 </script>
 
 <style scoped>
-.container {
+.calendar-container {
   min-height: 100vh;
-  padding: 20px;
-  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-  transition: background 0.3s ease;
+  padding: var(--space-5);
 }
 
-.content {
-  max-width: 900px;
+.calendar-content {
+  max-width: 800px;
   margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
 }
 
-.header {
-  margin-bottom: 32px;
+/* Header */
+.page-header {
+  margin-bottom: var(--space-8);
 }
 
-.back-btn {
-  display: inline-block;
-  padding: 8px 16px;
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  border-radius: 8px;
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-tertiary);
   text-decoration: none;
-  font-size: 0.9rem;
-  margin-bottom: 16px;
-  transition: background 0.3s ease, color 0.3s ease;
-  box-shadow: 0 2px 4px var(--shadow);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  margin-bottom: var(--space-4);
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
-.back-btn:hover {
-  background: var(--bg-hover);
-  transform: translateY(-1px);
-}
-
-.title {
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  text-align: center;
-  margin-bottom: 8px;
-  transition: color 0.3s ease;
-}
-
-.subtitle {
-  text-align: center;
+.back-link:hover {
   color: var(--text-secondary);
-  font-size: 1rem;
-  transition: color 0.3s ease;
 }
 
-.month-selector {
+.header-text {
+  text-align: center;
+}
+
+.page-title {
+  font-size: var(--text-3xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: var(--tracking-tight);
+  margin-bottom: var(--space-2);
+}
+
+.page-subtitle {
+  font-size: var(--text-base);
+  color: var(--text-tertiary);
+}
+
+/* Month Navigation */
+.month-nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 24px;
-  margin-bottom: 24px;
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
 }
 
-.month-btn {
-  padding: 12px 20px;
+.nav-btn {
+  width: 44px;
+  height: 44px;
   background: var(--bg-card);
-  border: none;
-  border-radius: 8px;
-  font-size: 1.2rem;
-  font-weight: 600;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.3s ease, color 0.3s ease;
-  box-shadow: 0 2px 4px var(--shadow);
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
 }
 
-.month-btn:hover {
+.nav-btn:hover {
   background: var(--bg-hover);
-  color: var(--accent-primary);
-  transform: translateY(-1px);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: scale(1.05);
+}
+
+.nav-btn:active {
+  transform: scale(0.95);
 }
 
 .current-month {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: var(--text-xl);
+  font-weight: 600;
   color: var(--text-primary);
-  min-width: 180px;
+  min-width: 160px;
   text-align: center;
-  transition: color 0.3s ease;
 }
 
+/* Calendar Card */
 .calendar-card {
   background: var(--bg-card);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 2px 8px var(--shadow);
-  margin-bottom: 24px;
-  transition: background 0.3s ease;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--space-5);
 }
 
 .weekday-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
 }
 
 .weekday {
   text-align: center;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--text-secondary);
-  padding: 8px;
-  transition: color 0.3s ease;
+  color: var(--text-tertiary);
+  padding: var(--space-2);
+}
+
+.weekday.weekend {
+  color: var(--error);
 }
 
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .calendar-day {
@@ -434,249 +481,410 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 8px;
-  border-radius: 12px;
-  background: var(--bg-hover);
-  cursor: pointer;
-  transition: background 0.3s ease, transform 0.2s;
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--bg-subtle);
+  border: 2px solid transparent;
+  cursor: default;
   position: relative;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
 }
 
 .calendar-day.other-month {
   opacity: 0.3;
-  cursor: default;
 }
 
 .calendar-day.today {
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-  font-weight: 700;
+  background: var(--accent-subtle);
+  border-color: var(--accent);
+}
+
+.today-indicator {
+  position: absolute;
+  bottom: 4px;
+  width: 4px;
+  height: 4px;
+  background: var(--accent);
+  border-radius: 50%;
 }
 
 .calendar-day.has-diary {
-  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
   cursor: pointer;
+  border-color: var(--border-default);
 }
 
 .calendar-day.has-diary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(139, 92, 246, 0.2);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
 }
 
+.calendar-day.has-diary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Mood-based colors */
+.calendar-day.mood-happy { background: var(--emotion-happy-subtle); }
+.calendar-day.mood-calm { background: var(--emotion-calm-subtle); }
+.calendar-day.mood-sad { background: var(--emotion-sad-subtle); }
+.calendar-day.mood-angry { background: var(--emotion-angry-subtle); }
+.calendar-day.mood-tired { background: var(--emotion-tired-subtle); }
+
+.calendar-day.mood-happy:hover { border-color: var(--emotion-happy); }
+.calendar-day.mood-calm:hover { border-color: var(--emotion-calm); }
+.calendar-day.mood-sad:hover { border-color: var(--emotion-sad); }
+.calendar-day.mood-angry:hover { border-color: var(--emotion-angry); }
+.calendar-day.mood-tired:hover { border-color: var(--emotion-tired); }
+
 .day-number {
-  font-size: 1rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 4px;
-  transition: color 0.3s ease;
 }
 
 .day-emoji {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
+  margin-top: 2px;
 }
 
-.calendar-stats {
+/* Stats Card */
+.stats-card {
   background: var(--bg-card);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 2px 8px var(--shadow);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 32px;
-  transition: background 0.3s ease;
+  gap: var(--space-8);
+  margin-bottom: var(--space-5);
 }
 
 .stat-item {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-3);
 }
 
-.stat-label {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  transition: color 0.3s ease;
+.stat-icon {
+  font-size: 2rem;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
 }
 
 .stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: var(--text-xl);
+  font-weight: 600;
   color: var(--text-primary);
-  transition: color 0.3s ease;
+}
+
+.stat-label {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
 }
 
 .stat-divider {
   width: 1px;
   height: 40px;
-  background: var(--border-color);
-  transition: background 0.3s ease;
+  background: var(--border-default);
 }
 
-/* 모달 */
+/* Legend */
+.legend-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.legend-title {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-3);
+}
+
+.legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.legend-emoji {
+  font-size: 1.25rem;
+}
+
+.legend-label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* Modal */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
+  padding: var(--space-5);
 }
 
-.modal-content {
-  background: var(--bg-card);
-  border-radius: 16px;
-  padding: 32px;
-  max-width: 600px;
+.modal-container {
   width: 100%;
-  max-height: 80vh;
+  max-width: 560px;
+  max-height: 85vh;
   overflow-y: auto;
-  position: relative;
-  box-shadow: 0 20px 60px var(--shadow-modal);
-  transition: background 0.3s ease;
 }
 
-.modal-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: var(--bg-hover-deep);
-  border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  font-size: 1.2rem;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background 0.3s ease, color 0.3s ease;
-}
-
-.modal-close:hover {
-  background: var(--bg-hover-deep);
-  color: var(--text-primary);
+.modal-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
 }
 
 .modal-header {
   display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--border-subtle);
+  background: linear-gradient(180deg, var(--emotion-color, var(--accent))08 0%, transparent 100%);
+}
+
+.modal-emotion {
+  display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: var(--space-4);
 }
 
 .modal-emoji {
-  font-size: 2rem;
+  font-size: 2.5rem;
+}
+
+.modal-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
 .modal-date {
-  font-size: 1.1rem;
+  font-size: var(--text-base);
   font-weight: 600;
+  color: var(--text-primary);
+}
+
+.modal-mood {
+  font-size: var(--text-sm);
   color: var(--text-secondary);
-  transition: color 0.3s ease;
+}
+
+.modal-close {
+  width: 36px;
+  height: 36px;
+  background: var(--bg-subtle);
+  border: none;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.modal-close:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .modal-prompt {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--text-body);
-  background: var(--bg-hover);
-  padding: 16px;
-  border-radius: 12px;
-  margin-bottom: 16px;
-  transition: background 0.3s ease, color 0.3s ease;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  background: var(--bg-subtle);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.prompt-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 
 .modal-body {
-  font-size: 1rem;
-  line-height: 1.8;
-  color: var(--text-body);
+  padding: var(--space-6);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-primary);
   white-space: pre-wrap;
-  margin-bottom: 20px;
-  transition: color 0.3s ease;
 }
 
 .modal-actions {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
 }
 
-.modal-edit {
+.action-btn {
   flex: 1;
-  padding: 14px;
-  background: var(--accent-primary);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  border: none;
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
 }
 
-.modal-edit:hover {
-  background: var(--accent-secondary);
+.action-btn:hover {
   transform: translateY(-1px);
 }
 
-.modal-delete {
-  flex: 1;
-  padding: 14px;
-  background: var(--delete-bg);
-  color: var(--delete-text);
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+.action-btn:active {
+  transform: translateY(0) scale(0.98);
 }
 
-.modal-delete:hover {
+.action-edit {
+  background: var(--accent);
+  color: white;
+}
+
+.action-edit:hover {
+  background: var(--accent-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.action-delete {
+  background: var(--error-subtle);
+  color: var(--error);
+}
+
+.action-delete:hover {
   background: var(--delete-bg-hover);
 }
 
+/* Modal Transitions */
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+.modal-enter-active .modal-card,
+.modal-leave-active .modal-card {
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-from .modal-card {
+  transform: scale(0.95) translateY(10px);
+}
+
+.modal-leave-to .modal-card {
+  transform: scale(0.95);
+}
+
+/* Animations */
+.animate-fade-in-up {
+  opacity: 0;
+  animation: fadeInUp var(--duration-normal) var(--ease-out) forwards;
+}
+
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+
+/* Responsive */
 @media (max-width: 640px) {
-  .title {
-    font-size: 1.8rem;
+  .calendar-content {
+    padding: var(--space-4) var(--space-2);
+  }
+
+  .page-title {
+    font-size: var(--text-2xl);
   }
 
   .current-month {
-    font-size: 1.2rem;
-    min-width: 140px;
-  }
-
-  .month-btn {
-    padding: 10px 16px;
+    font-size: var(--text-lg);
+    min-width: 120px;
   }
 
   .calendar-card {
-    padding: 16px;
+    padding: var(--space-3);
   }
 
-  .day-number {
-    font-size: 0.9rem;
+  .weekday, .day-number {
+    font-size: var(--text-xs);
   }
 
   .day-emoji {
-    font-size: 1.2rem;
+    font-size: 1rem;
   }
 
-  .calendar-stats {
+  .stats-card {
     flex-direction: column;
-    gap: 16px;
+    gap: var(--space-4);
   }
 
   .stat-divider {
-    width: 100%;
+    width: 60px;
     height: 1px;
   }
 
-  .modal-content {
-    padding: 24px;
+  .legend-items {
+    justify-content: center;
+  }
+
+  .modal-header {
+    padding: var(--space-5);
+  }
+
+  .modal-body {
+    padding: var(--space-5);
+  }
+
+  .modal-actions {
+    padding: var(--space-4);
   }
 }
 </style>

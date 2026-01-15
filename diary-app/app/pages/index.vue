@@ -3,152 +3,278 @@
   <HomePageSkeleton v-if="isLoading" />
 
   <!-- 실제 컨텐츠 -->
-  <div v-else class="container">
-    <div class="content">
-      <!-- 헤더 -->
-      <header class="header">
-        <h1 class="title">✨ 오늘의 일기</h1>
-        <p class="subtitle">AI가 당신의 하루를 함께합니다</p>
+  <div v-else class="home-container">
+    <!-- 배경 그라데이션 (감정에 따라 변화) -->
+    <div class="ambient-bg" :style="ambientStyle"></div>
+
+    <div class="home-content">
+      <!-- 헤더 섹션 -->
+      <header class="home-header animate-fade-in-up">
+        <div class="greeting">
+          <span class="greeting-time">{{ greetingTime }}</span>
+          <h1 class="greeting-title">오늘 하루는 어떠셨나요?</h1>
+        </div>
+        <p class="greeting-sub">기록은 기억이 되고, 기억은 성장이 됩니다</p>
       </header>
 
-      <!-- 통계 카드 -->
-      <div class="stats-grid">
-        <NuxtLink to="/calendar" class="stat-card">
-          <div class="stat-icon">📅</div>
-          <div class="stat-label">연속 작성</div>
-          <div class="stat-value">{{ stats.streak }}일</div>
+      <!-- Bento Grid 레이아웃 -->
+      <div class="bento-grid">
+        <!-- 메인 CTA: 일기 작성 -->
+        <NuxtLink to="/write" class="bento-card bento-main animate-fade-in-up stagger-1">
+          <div class="card-glow"></div>
+          <div class="bento-main-content">
+            <div class="bento-main-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+            </div>
+            <div class="bento-main-text">
+              <span class="bento-main-title">오늘의 이야기</span>
+              <span class="bento-main-desc">새로운 일기 작성하기</span>
+            </div>
+          </div>
+          <div class="bento-main-arrow">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </div>
         </NuxtLink>
-        <NuxtLink to="/insights?filter=thisMonth" class="stat-card">
-          <div class="stat-icon">📖</div>
-          <div class="stat-label">이번 달</div>
-          <div class="stat-value">{{ stats.thisMonth }}개</div>
-        </NuxtLink>
-        <NuxtLink to="/report" class="stat-card">
-          <div class="stat-icon">📊</div>
-          <div class="stat-label">리포트</div>
-          <div class="stat-value">{{ stats.achievement }}%</div>
-        </NuxtLink>
-      </div>
 
-      <!-- 최근 일기 -->
-      <div class="recent-section">
-        <div class="section-header">
-          <h3 class="section-title">최근 일기</h3>
-          <NuxtLink v-if="recentDiaries.length > 0" to="/insights" class="view-all-btn">
-            전체 보기 →
-          </NuxtLink>
-        </div>
-        <div v-if="recentDiaries.length === 0" class="empty-recent">
-          <p>자유롭게 당신의 이야기를 들려주세요...</p>
-        </div>
-        <div v-else class="recent-list">
-          <div
-            v-for="diary in recentDiaries"
-            :key="diary.id"
-            class="recent-item"
-            @click="openDiary(diary)"
-          >
-            <span class="recent-emoji">{{ getMoodEmoji(diary.mood) }}</span>
-            <div class="recent-info">
-              <div class="recent-date">{{ diary.date }}</div>
-              <div class="recent-preview">{{ diary.content.substring(0, 30) }}...</div>
+        <!-- 연속 작성 -->
+        <NuxtLink to="/calendar" class="bento-card bento-stat animate-fade-in-up stagger-2">
+          <div class="stat-icon-wrap">
+            <span class="stat-emoji">🔥</span>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ stats.streak }}<span class="stat-unit">일</span></span>
+            <span class="stat-label">연속 작성</span>
+          </div>
+          <div class="stat-ring" :style="{ '--progress': Math.min(stats.streak * 10, 100) + '%' }"></div>
+        </NuxtLink>
+
+        <!-- 이번 달 -->
+        <NuxtLink to="/insights?filter=thisMonth" class="bento-card bento-stat animate-fade-in-up stagger-3">
+          <div class="stat-icon-wrap">
+            <span class="stat-emoji">📝</span>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ stats.thisMonth }}<span class="stat-unit">개</span></span>
+            <span class="stat-label">이번 달 일기</span>
+          </div>
+          <div class="stat-bar">
+            <div class="stat-bar-fill" :style="{ width: stats.achievement + '%' }"></div>
+          </div>
+        </NuxtLink>
+
+        <!-- 최근 일기 (큰 카드) -->
+        <div class="bento-card bento-recent animate-fade-in-up stagger-4">
+          <div class="recent-header">
+            <h3 class="recent-title">최근 일기</h3>
+            <NuxtLink v-if="recentDiaries.length > 0" to="/insights" class="recent-more">
+              전체 보기
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </NuxtLink>
+          </div>
+
+          <!-- 빈 상태 -->
+          <div v-if="recentDiaries.length === 0" class="empty-state">
+            <div class="empty-illustration">
+              <span class="empty-emoji animate-float">📔</span>
+            </div>
+            <p class="empty-text">아직 작성된 일기가 없어요</p>
+            <p class="empty-sub">첫 번째 이야기를 들려주세요</p>
+          </div>
+
+          <!-- 일기 목록 -->
+          <div v-else class="recent-list">
+            <div
+              v-for="(diary, index) in recentDiaries"
+              :key="diary.id"
+              class="diary-card"
+              :class="'stagger-' + (index + 1)"
+              :style="{ '--emotion-color': getEmotionColor(diary.mood) }"
+              @click="openDiary(diary)"
+            >
+              <div class="diary-emotion">
+                <span class="diary-emoji">{{ getMoodEmoji(diary.mood) }}</span>
+              </div>
+              <div class="diary-content">
+                <div class="diary-meta">
+                  <span class="diary-date">{{ formatDate(diary.date) }}</span>
+                  <span v-if="diary.emotion" class="diary-ai-tag">AI 분석 완료</span>
+                </div>
+                <p class="diary-preview">{{ diary.content.substring(0, 50) }}{{ diary.content.length > 50 ? '...' : '' }}</p>
+              </div>
+              <div class="diary-arrow">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- 일기 모달 -->
-      <div v-if="selectedDiary" class="modal-overlay" @click="closeDiary">
-        <div class="modal-content" @click.stop>
-          <button @click="closeDiary" class="modal-close">✕</button>
-          <div class="modal-header">
-            <span class="modal-emoji">{{ getMoodEmoji(selectedDiary.mood) }}</span>
-            <span class="modal-date">{{ selectedDiary.date }}</span>
+        <!-- On This Day -->
+        <div class="bento-card bento-memory animate-fade-in-up stagger-5" v-if="onThisDay">
+          <div class="memory-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            1년 전 오늘
           </div>
-          <p class="modal-prompt">{{ selectedDiary.prompt }}</p>
-          <div class="modal-body">
-            {{ selectedDiary.content }}
-          </div>
-
-          <!-- 이미지 갤러리 -->
-          <ImageGallery v-if="selectedDiary.images && selectedDiary.images.length > 0" :imageIds="selectedDiary.images" />
-
-          <!-- AI 분석 결과 -->
-          <div v-if="selectedDiary.emotion" class="ai-analysis">
-            <div class="analysis-header">
-              <span>🤖 AI 감정 분석</span>
-              <span v-if="selectedDiary.aiSource === 'gemini'" class="ai-badge gemini">Gemini</span>
-              <span v-else class="ai-badge local">Local</span>
-            </div>
-            <div class="analysis-content">
-              <div class="analysis-item">
-                <span class="analysis-label">감정:</span>
-                <span class="analysis-value">
-                  {{ getMoodEmoji(selectedDiary.emotion) }} {{ getMoodLabel(selectedDiary.emotion) }}
-                  <span class="analysis-score">({{ selectedDiary.emotionScore }}점)</span>
-                </span>
-              </div>
-              <div class="analysis-item" v-if="selectedDiary.keywords && selectedDiary.keywords.length > 0">
-                <span class="analysis-label">키워드:</span>
-                <span class="analysis-value">
-                  <span v-for="(keyword, index) in selectedDiary.keywords" :key="index" class="keyword-tag">
-                    {{ keyword }}
-                  </span>
-                </span>
-              </div>
-              <div class="analysis-item" v-if="selectedDiary.feedback">
-                <span class="analysis-label">피드백:</span>
-                <span class="analysis-value feedback-text">{{ selectedDiary.feedback }}</span>
-              </div>
-              <div class="analysis-item advice-item" v-if="selectedDiary.advice">
-                <span class="analysis-label">💡 조언:</span>
-                <span class="analysis-value advice-text">{{ selectedDiary.advice }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="modal-actions">
-            <button @click="editDiary" class="modal-edit">
-              ✏️ 수정하기
-            </button>
-            <button @click="deleteDiary" class="modal-delete">
-              🗑️ 삭제하기
-            </button>
-          </div>
+          <p class="memory-preview">{{ onThisDay.content.substring(0, 60) }}...</p>
+          <span class="memory-emoji">{{ getMoodEmoji(onThisDay.mood) }}</span>
         </div>
-      </div>
 
-      <!-- 액션 버튼 -->
-      <div class="action-section">
-        <NuxtLink to="/write" class="btn-write">
-          작성하기
+        <!-- 리포트 바로가기 -->
+        <NuxtLink to="/report" class="bento-card bento-report animate-fade-in-up stagger-5">
+          <div class="report-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 20V10M12 20V4M6 20v-6"/>
+            </svg>
+          </div>
+          <div class="report-content">
+            <span class="report-title">감정 리포트</span>
+            <span class="report-value">{{ stats.achievement }}% 달성</span>
+          </div>
         </NuxtLink>
       </div>
     </div>
+
+    <!-- 일기 상세 모달 -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="selectedDiary" class="modal-overlay" @click="closeDiary">
+          <div class="modal-container" @click.stop>
+            <div class="modal-card" :style="{ '--emotion-color': getEmotionColor(selectedDiary.mood) }">
+              <!-- 모달 헤더 -->
+              <div class="modal-header">
+                <div class="modal-emotion">
+                  <span class="modal-emoji">{{ getMoodEmoji(selectedDiary.mood) }}</span>
+                  <div class="modal-meta">
+                    <span class="modal-date">{{ formatDate(selectedDiary.date) }}</span>
+                    <span class="modal-mood">{{ getMoodLabel(selectedDiary.mood) }}</span>
+                  </div>
+                </div>
+                <button class="modal-close" @click="closeDiary">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- 프롬프트 -->
+              <div v-if="selectedDiary.prompt" class="modal-prompt">
+                <span class="prompt-icon">💭</span>
+                {{ selectedDiary.prompt }}
+              </div>
+
+              <!-- 본문 -->
+              <div class="modal-body">
+                {{ selectedDiary.content }}
+              </div>
+
+              <!-- 이미지 갤러리 -->
+              <ImageGallery v-if="selectedDiary.images && selectedDiary.images.length > 0" :imageIds="selectedDiary.images" />
+
+              <!-- AI 분석 결과 -->
+              <div v-if="selectedDiary.emotion" class="ai-section">
+                <div class="ai-header">
+                  <div class="ai-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
+                      <path d="M12 2a10 10 0 0 1 10 10"/>
+                    </svg>
+                    AI 감정 분석
+                  </div>
+                  <span class="ai-badge" :class="selectedDiary.aiSource">
+                    {{ selectedDiary.aiSource === 'gemini' ? 'Gemini' : 'Local' }}
+                  </span>
+                </div>
+
+                <div class="ai-content">
+                  <!-- 감정 분석 -->
+                  <div class="ai-emotion">
+                    <div class="ai-emotion-main">
+                      <span class="ai-emotion-emoji">{{ getMoodEmoji(selectedDiary.emotion) }}</span>
+                      <div class="ai-emotion-info">
+                        <span class="ai-emotion-label">{{ getMoodLabel(selectedDiary.emotion) }}</span>
+                        <div class="ai-emotion-score">
+                          <div class="score-bar">
+                            <div class="score-fill" :style="{ width: selectedDiary.emotionScore + '%' }"></div>
+                          </div>
+                          <span class="score-value">{{ selectedDiary.emotionScore }}점</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 키워드 -->
+                  <div v-if="selectedDiary.keywords && selectedDiary.keywords.length > 0" class="ai-keywords">
+                    <span class="ai-section-label">키워드</span>
+                    <div class="keyword-list">
+                      <span v-for="(keyword, index) in selectedDiary.keywords" :key="index" class="keyword-tag">
+                        {{ keyword }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- 피드백 -->
+                  <div v-if="selectedDiary.feedback" class="ai-feedback">
+                    <span class="ai-section-label">피드백</span>
+                    <p class="feedback-text">{{ selectedDiary.feedback }}</p>
+                  </div>
+
+                  <!-- 조언 -->
+                  <div v-if="selectedDiary.advice" class="ai-advice">
+                    <div class="advice-icon">💡</div>
+                    <p class="advice-text">{{ selectedDiary.advice }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 액션 버튼 -->
+              <div class="modal-actions">
+                <button class="action-btn action-edit" @click="editDiary">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  수정하기
+                </button>
+                <button class="action-btn action-delete" @click="handleDelete">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                  삭제하기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-/**
- * 📌 useDiary에서 API 호출 함수들을 가져옵니다.
- * - getAll: GET /api/diaries (전체 일기 조회)
- * - deleteDiary: DELETE /api/diaries/:id (일기 삭제)
- *
- * ⚠️ 중요: 이 함수들은 이제 모두 async 함수입니다!
- */
 const { getAll, deleteDiary: removeDiary } = useDiary()
 
-// 📌 기분 이모지 매핑
+// 기분 이모지 매핑
 const moods = {
   happy: '😊',
   calm: '😌',
   sad: '😔',
   angry: '😤',
   tired: '😴',
-  excited: '🤩'  // 백엔드 샘플 데이터에 있는 mood 추가
+  excited: '🤩'
 }
 
-// 📌 기분 한글 라벨 매핑
+// 기분 한글 라벨
 const moodLabels = {
   happy: '행복',
   calm: '평온',
@@ -158,116 +284,114 @@ const moodLabels = {
   excited: '신남'
 }
 
-// 📌 통계 데이터 (반응형)
-const stats = ref({
-  streak: 0,
-  thisMonth: 0,
-  achievement: 0
+// 감정 색상 매핑
+const emotionColors = {
+  happy: 'var(--emotion-happy)',
+  calm: 'var(--emotion-calm)',
+  sad: 'var(--emotion-sad)',
+  angry: 'var(--emotion-angry)',
+  tired: 'var(--emotion-tired)',
+  excited: 'var(--emotion-happy)'
+}
+
+// 상태
+const stats = ref({ streak: 0, thisMonth: 0, achievement: 0 })
+const recentDiaries = ref([])
+const selectedDiary = ref(null)
+const isLoading = ref(true)
+const onThisDay = ref(null)
+
+// 인사말 시간대
+const greetingTime = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 6) return '늦은 밤이에요'
+  if (hour < 12) return '좋은 아침이에요'
+  if (hour < 18) return '좋은 오후에요'
+  return '좋은 저녁이에요'
 })
 
-// 📌 최근 일기 목록 (반응형)
-const recentDiaries = ref([])
+// 배경 스타일 (최근 감정 기반)
+const ambientStyle = computed(() => {
+  if (recentDiaries.value.length === 0) return {}
+  const mood = recentDiaries.value[0].mood
+  const color = emotionColors[mood] || 'var(--accent)'
+  return {
+    background: `radial-gradient(ellipse at 50% 0%, ${color}15 0%, transparent 50%)`
+  }
+})
 
-// 📌 선택된 일기 (모달에서 사용)
-const selectedDiary = ref(null)
-
-// 📌 로딩 상태
-const isLoading = ref(true)
-
-// 📌 기분 이모지 반환 함수
+// 헬퍼 함수들
 const getMoodEmoji = (mood) => moods[mood] || '😊'
-
-// 📌 기분 라벨 반환 함수
 const getMoodLabel = (mood) => moodLabels[mood] || mood
+const getEmotionColor = (mood) => emotionColors[mood] || 'var(--accent)'
 
-// 📌 일기 모달 열기
+const formatDate = (dateStr) => {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffTime = now - date
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+  if (diffDays === 0) return '오늘'
+  if (diffDays === 1) return '어제'
+  if (diffDays < 7) return `${diffDays}일 전`
+
+  return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
+}
+
+// 모달 함수
 const openDiary = (diary) => {
-  console.log('📖 [index.vue] 일기 모달 열기:', diary.id)
   selectedDiary.value = diary
+  document.body.style.overflow = 'hidden'
 }
 
-// 📌 일기 모달 닫기
 const closeDiary = () => {
-  console.log('📖 [index.vue] 일기 모달 닫기')
   selectedDiary.value = null
+  document.body.style.overflow = ''
 }
 
-// 📌 일기 수정 페이지로 이동
 const editDiary = () => {
   if (!selectedDiary.value) return
-  console.log('✏️ [index.vue] 일기 수정 페이지로 이동:', selectedDiary.value.id)
   navigateTo(`/write?edit=${selectedDiary.value.id}`)
 }
 
-/**
- * 🗑️ 일기 삭제 함수
- * - 이제 백엔드 API를 호출합니다 (DELETE /api/diaries/:id)
- */
-const deleteDiary = async () => {
+const handleDelete = async () => {
   if (!selectedDiary.value) return
 
   if (confirm('정말로 이 일기를 삭제하시겠습니까?')) {
-    console.log('🗑️ [index.vue] 일기 삭제 시작...')
-
     try {
       const diary = selectedDiary.value
 
-      // 1. 첨부된 이미지 먼저 삭제 (IndexedDB에서)
       if (diary.images && diary.images.length > 0) {
-        console.log('🖼️ [index.vue] 첨부 이미지 삭제 중...', diary.images)
         const { deleteImages } = useImageDB()
         await deleteImages(diary.images)
       }
 
-      // 2. 📌 일기 데이터 삭제 (백엔드 API 호출)
-      // ⚠️ removeDiary는 이제 async 함수이므로 await 필요!
-      console.log('🗑️ [index.vue] 백엔드 API 호출: DELETE /api/diaries/' + diary.id)
       await removeDiary(diary.id)
-
-      console.log('✅ [index.vue] 일기 삭제 완료!')
-
-      // 3. 상태 업데이트
       closeDiary()
-
-      // 📌 삭제 후 통계 다시 계산 (API 재호출)
       await calculateStats()
-
     } catch (error) {
-      console.error('❌ [index.vue] 일기 삭제 중 오류:', error)
+      console.error('삭제 오류:', error)
       alert('일기를 삭제하는 중 오류가 발생했습니다.')
     }
   }
 }
 
-/**
- * 📊 통계 계산 함수
- * - 이제 백엔드 API를 호출합니다 (GET /api/diaries)
- *
- * ⚠️ 중요: getAll()이 이제 async 함수이므로 await 필요!
- */
+// 통계 계산
 const calculateStats = async () => {
-  console.log('📊 [index.vue] 통계 계산 시작...')
-
   try {
-    // 📌 백엔드에서 모든 일기 조회 (API 호출)
-    console.log('📊 [index.vue] 백엔드 API 호출: GET /api/diaries')
     const diaries = await getAll()
-
-    console.log(`📊 [index.vue] 총 ${diaries.length}개의 일기를 받아왔습니다.`)
-
     const today = new Date()
     const currentMonth = today.getMonth()
     const currentYear = today.getFullYear()
 
-    // 📌 이번 달 일기 수 계산
+    // 이번 달 일기
     const thisMonthDiaries = diaries.filter(d => {
       const diaryDate = new Date(d.date)
       return diaryDate.getMonth() === currentMonth && diaryDate.getFullYear() === currentYear
     })
     stats.value.thisMonth = thisMonthDiaries.length
-    console.log(`📊 [index.vue] 이번 달 일기: ${thisMonthDiaries.length}개`)
 
-    // 📌 연속 작성일 계산
+    // 연속 작성일 계산
     let streak = 0
     const sortedDiaries = [...diaries].sort((a, b) => new Date(b.date) - new Date(a.date))
 
@@ -280,280 +404,589 @@ const calculateStats = async () => {
         for (let i = 1; i < sortedDiaries.length; i++) {
           const prevDate = new Date(sortedDiaries[i - 1].date)
           const currDate = new Date(sortedDiaries[i].date)
-          const diffTime = Math.abs(prevDate - currDate)
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-
-          if (diffDays === 1) {
-            streak++
-          } else {
-            break
-          }
+          const diffDays = Math.ceil(Math.abs(prevDate - currDate) / (1000 * 60 * 60 * 24))
+          if (diffDays === 1) streak++
+          else break
         }
       }
     }
     stats.value.streak = streak
-    console.log(`📊 [index.vue] 연속 작성일: ${streak}일`)
 
-    // 📌 달성률 계산 (이번 달 일수 대비)
+    // 달성률
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
     stats.value.achievement = Math.min(100, Math.round((thisMonthDiaries.length / daysInMonth) * 100))
-    console.log(`📊 [index.vue] 달성률: ${stats.value.achievement}%`)
 
-    // 📌 최근 일기 3개 저장
+    // 최근 일기
     recentDiaries.value = sortedDiaries.slice(0, 3)
-    console.log(`📊 [index.vue] 최근 일기 ${recentDiaries.value.length}개 표시`)
+
+    // On This Day (1년 전 오늘)
+    const oneYearAgo = new Date()
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
+    const oneYearAgoStr = oneYearAgo.toISOString().split('T')[0]
+    onThisDay.value = diaries.find(d => d.date === oneYearAgoStr) || null
 
   } catch (error) {
-    console.error('❌ [index.vue] 통계 계산 중 오류:', error)
-    // 에러 발생 시 기본값 유지
+    console.error('통계 계산 오류:', error)
     recentDiaries.value = []
   }
 }
 
-/**
- * 🚀 컴포넌트 마운트 시 실행
- * - 백엔드에서 데이터를 가져와 통계를 계산합니다
- */
 onMounted(async () => {
-  console.log('🚀 [index.vue] 페이지 로드 시작...')
-
-  // 로딩 상태 시작
   isLoading.value = true
-
-  // 📌 최소 로딩 시간 보장 (UX 개선 - 너무 빠르면 깜빡임)
-  await new Promise(resolve => setTimeout(resolve, 500))
-
-  // 📌 백엔드에서 데이터 가져오기 및 통계 계산
+  await new Promise(resolve => setTimeout(resolve, 400))
   await calculateStats()
-
-  // 로딩 완료
   isLoading.value = false
-  console.log('✅ [index.vue] 페이지 로드 완료!')
 })
-
 </script>
 
 <style scoped>
-.container {
+/* ============================================
+   HOME PAGE - Bento Grid Layout
+   ============================================ */
+.home-container {
   min-height: 100vh;
-  padding: 20px;
-  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-  transition: background 0.3s ease;
+  padding: var(--space-5);
+  position: relative;
+  overflow: hidden;
 }
 
-.content {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 40px 20px;
-}
-
-.header {
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-.title {
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-}
-
-.subtitle {
-  color: var(--text-secondary);
-  font-size: 1rem;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.stat-card {
-  background: var(--bg-card);
-  border-radius: 16px;
-  padding: 24px;
-  text-align: center;
-  box-shadow: 0 2px 8px var(--shadow);
-  transition: all 0.2s;
-  cursor: pointer;
-  text-decoration: none;
-  color: inherit;
-}
-
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px var(--shadow-hover);
-}
-
-.stat-icon {
-  font-size: 2rem;
-  margin-bottom: 8px;
-}
-
-.stat-label {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-}
-
-.stat-value {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.recent-section {
-  background: var(--bg-card);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 2px 8px var(--shadow);
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.section-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.view-all-btn {
-  font-size: 0.9rem;
-  color: var(--accent-primary);
-  text-decoration: none;
-  font-weight: 600;
-  transition: color 0.2s;
-}
-
-.view-all-btn:hover {
-  color: var(--accent-secondary);
-}
-
-.empty-recent {
-  text-align: center;
-  padding: 32px;
-  color: var(--text-tertiary);
-}
-
-.recent-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.recent-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px;
-  border-radius: 8px;
-  background: var(--bg-hover);
-  transition: all 0.2s;
-  cursor: pointer;
-}
-
-.recent-item:hover {
-  background: var(--bg-hover-deep);
-  transform: translateY(-1px);
-}
-
-.recent-emoji {
-  font-size: 1.8rem;
-}
-
-.recent-info {
-  flex: 1;
-}
-
-.recent-date {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  margin-bottom: 4px;
-}
-
-.recent-preview {
-  font-size: 0.9rem;
-  color: var(--text-body);
-}
-
-.action-section {
-  display: flex;
-  justify-content: center;
-}
-
-.btn-write {
-  width: 100%;
-  max-width: 400px;
-  padding: 18px;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-write:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px var(--accent-shadow);
-}
-
-/* 모달 */
-.modal-overlay {
+.ambient-bg {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
+  height: 60vh;
+  pointer-events: none;
+  z-index: 0;
+  transition: background var(--duration-slower) var(--ease-out);
+}
+
+.home-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-4);
+  position: relative;
+  z-index: 1;
+}
+
+/* Header */
+.home-header {
+  text-align: center;
+  margin-bottom: var(--space-10);
+}
+
+.greeting {
+  margin-bottom: var(--space-3);
+}
+
+.greeting-time {
+  display: inline-block;
+  font-size: var(--text-sm);
+  color: var(--accent);
+  font-weight: 500;
+  margin-bottom: var(--space-2);
+  letter-spacing: var(--tracking-wide);
+}
+
+.greeting-title {
+  font-size: var(--text-4xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+}
+
+.greeting-sub {
+  font-size: var(--text-base);
+  color: var(--text-tertiary);
+  margin-top: var(--space-2);
+}
+
+/* Bento Grid */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: auto;
+  gap: var(--space-4);
+}
+
+/* Bento Card Base */
+.bento-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  padding: var(--space-5);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    transform var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out),
+    border-color var(--duration-normal) var(--ease-out);
+}
+
+.bento-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--border-default);
+}
+
+/* Main CTA Card */
+.bento-main {
+  grid-column: span 2;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+  border: none;
+  padding: var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.bento-main:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: var(--shadow-xl), var(--shadow-glow);
+}
+
+.bento-main:hover .bento-main-arrow {
+  transform: translateX(4px);
+}
+
+.card-glow {
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 60%;
+  height: 200%;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.bento-main-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.bento-main-icon {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.bento-main-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.bento-main-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: white;
+}
+
+.bento-main-desc {
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.bento-main-arrow {
+  color: white;
+  opacity: 0.8;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+/* Stat Cards */
+.bento-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  cursor: pointer;
+}
+
+.stat-icon-wrap {
+  width: 48px;
+  height: 48px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-emoji {
+  font-size: 1.5rem;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.stat-value {
+  font-size: var(--text-3xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: var(--tracking-tight);
+}
+
+.stat-unit {
+  font-size: var(--text-lg);
+  font-weight: 400;
+  color: var(--text-tertiary);
+  margin-left: 2px;
+}
+
+.stat-label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* Progress ring */
+.stat-ring {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--accent) var(--progress, 0%),
+    var(--border-default) var(--progress, 0%)
+  );
+  opacity: 0.3;
+}
+
+.stat-ring::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  background: var(--bg-card);
+  border-radius: 50%;
+}
+
+/* Progress bar */
+.stat-bar {
+  height: 4px;
+  background: var(--border-default);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-top: auto;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--radius-full);
+  transition: width var(--duration-slow) var(--ease-out);
+}
+
+/* Recent Section */
+.bento-recent {
+  grid-column: span 2;
+  padding: var(--space-6);
+}
+
+.recent-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-5);
+}
+
+.recent-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.recent-more {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--accent);
+  font-weight: 500;
+  text-decoration: none;
+  transition: gap var(--duration-fast) var(--ease-out);
+}
+
+.recent-more:hover {
+  gap: var(--space-2);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: var(--space-10) var(--space-4);
+}
+
+.empty-illustration {
+  margin-bottom: var(--space-4);
+}
+
+.empty-emoji {
+  font-size: 4rem;
+  display: inline-block;
+}
+
+.empty-text {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.empty-sub {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+/* Diary Cards */
+.recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.diary-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--bg-subtle);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.diary-card:hover {
+  background: var(--bg-hover);
+  border-color: var(--emotion-color, var(--border-default));
+  transform: translateX(4px);
+}
+
+.diary-card:hover .diary-arrow {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+.diary-emotion {
+  width: 48px;
+  height: 48px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--emotion-color, var(--border-default));
+  flex-shrink: 0;
+}
+
+.diary-emoji {
+  font-size: 1.5rem;
+}
+
+.diary-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.diary-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.diary-date {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.diary-ai-tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: var(--accent-subtle);
+  color: var(--accent);
+  border-radius: var(--radius-full);
+  font-weight: 500;
+}
+
+.diary-preview {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.diary-arrow {
+  color: var(--text-tertiary);
+  opacity: 0;
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+/* On This Day */
+.bento-memory {
+  background: linear-gradient(135deg, var(--bg-subtle) 0%, var(--bg-card) 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  cursor: pointer;
+}
+
+.memory-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.memory-preview {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: var(--leading-relaxed);
+}
+
+.memory-emoji {
+  font-size: 1.5rem;
+  margin-top: auto;
+}
+
+/* Report Card */
+.bento-report {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  cursor: pointer;
+}
+
+.report-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--accent-subtle);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+
+.report-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.report-title {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.report-value {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ============================================
+   MODAL STYLES
+   ============================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
   background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
+  padding: var(--space-5);
 }
 
-.modal-content {
-  background: var(--bg-card);
-  border-radius: 16px;
-  padding: 32px;
-  max-width: 600px;
+.modal-container {
   width: 100%;
-  max-height: 80vh;
+  max-width: 560px;
+  max-height: 85vh;
   overflow-y: auto;
-  position: relative;
-  box-shadow: 0 20px 60px var(--shadow-modal);
+}
+
+.modal-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--border-subtle);
+  background: linear-gradient(180deg, var(--emotion-color, var(--accent))08 0%, transparent 100%);
+}
+
+.modal-emotion {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.modal-emoji {
+  font-size: 2.5rem;
+}
+
+.modal-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.modal-date {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.modal-mood {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
 }
 
 .modal-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: var(--bg-hover-deep);
+  width: 36px;
+  height: 36px;
+  background: var(--bg-subtle);
   border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  font-size: 1.2rem;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
 }
 
 .modal-close:hover {
@@ -561,195 +994,322 @@ onMounted(async () => {
   color: var(--text-primary);
 }
 
-.modal-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.modal-emoji {
-  font-size: 2rem;
-}
-
-.modal-date {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
+/* Modal Prompt */
 .modal-prompt {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--text-body);
-  background: var(--bg-hover);
-  padding: 16px;
-  border-radius: 12px;
-  margin-bottom: 16px;
-}
-
-.modal-body {
-  font-size: 1rem;
-  line-height: 1.8;
-  color: var(--text-body);
-  white-space: pre-wrap;
-  margin-bottom: 20px;
-}
-
-/* AI 분석 결과 */
-.ai-analysis {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  border: 2px solid #0ea5e9;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.analysis-header {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #0369a1;
-  margin-bottom: 16px;
   display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.analysis-content {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.analysis-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.analysis-label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #075985;
-}
-
-.analysis-value {
-  font-size: 1rem;
-  color: #0c4a6e;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.analysis-score {
-  font-size: 0.9rem;
-  color: #0284c7;
-  font-weight: 600;
-}
-
-.keyword-tag {
-  display: inline-block;
-  background: #0ea5e9;
-  color: white;
-  padding: 4px 12px;
-  border-radius: 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.feedback-text {
-  line-height: 1.6;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  background: var(--bg-subtle);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
   font-style: italic;
 }
 
-.advice-item {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  padding: 12px;
-  border-radius: 8px;
-  margin-top: 8px;
+.prompt-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 
-.advice-text {
-  line-height: 1.6;
-  color: #92400e;
-  font-weight: 500;
+/* Modal Body */
+.modal-body {
+  padding: var(--space-6);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+
+/* AI Section */
+.ai-section {
+  margin: 0 var(--space-6) var(--space-6);
+  padding: var(--space-5);
+  background: var(--accent-subtle);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--accent)20;
+}
+
+.ai-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.ai-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--accent-hover);
 }
 
 .ai-badge {
-  font-size: 0.75rem;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-weight: 700;
+  font-size: 10px;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .ai-badge.gemini {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
 }
 
 .ai-badge.local {
-  background: #e5e7eb;
-  color: #6b7280;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
 }
 
+.ai-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.ai-emotion-main {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ai-emotion-emoji {
+  font-size: 2rem;
+}
+
+.ai-emotion-info {
+  flex: 1;
+}
+
+.ai-emotion-label {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ai-emotion-score {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.score-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-card);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.score-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--radius-full);
+  transition: width var(--duration-slow) var(--ease-out);
+}
+
+.score-value {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.ai-section-label {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-weight: 500;
+  margin-bottom: var(--space-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.keyword-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.keyword-tag {
+  padding: var(--space-1) var(--space-3);
+  background: var(--bg-card);
+  color: var(--accent);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+
+.feedback-text {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: var(--leading-relaxed);
+}
+
+.ai-advice {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--warning-subtle);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-2);
+}
+
+.advice-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.advice-text {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  line-height: var(--leading-relaxed);
+}
+
+/* Modal Actions */
 .modal-actions {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
 }
 
-.modal-edit {
+.action-btn {
   flex: 1;
-  padding: 14px;
-  background: var(--accent-primary);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  border: none;
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
 }
 
-.modal-edit:hover {
-  background: var(--accent-secondary);
+.action-btn:hover {
   transform: translateY(-1px);
 }
 
-.modal-delete {
-  flex: 1;
-  padding: 14px;
-  background: var(--delete-bg);
-  color: var(--delete-text);
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+.action-btn:active {
+  transform: translateY(0) scale(0.98);
 }
 
-.modal-delete:hover {
+.action-edit {
+  background: var(--accent);
+  color: white;
+}
+
+.action-edit:hover {
+  background: var(--accent-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.action-delete {
+  background: var(--error-subtle);
+  color: var(--error);
+}
+
+.action-delete:hover {
   background: var(--delete-bg-hover);
 }
 
+/* Modal Transitions */
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+.modal-enter-active .modal-card,
+.modal-leave-active .modal-card {
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-from .modal-card {
+  transform: scale(0.95) translateY(10px);
+}
+
+.modal-leave-to .modal-card {
+  transform: scale(0.95);
+}
+
+/* Responsive */
 @media (max-width: 640px) {
-  .stats-grid {
+  .home-content {
+    padding: var(--space-6) var(--space-2);
+  }
+
+  .greeting-title {
+    font-size: var(--text-2xl);
+  }
+
+  .bento-grid {
     grid-template-columns: 1fr;
+    gap: var(--space-3);
   }
 
-  .title {
-    font-size: 1.8rem;
+  .bento-main {
+    grid-column: span 1;
   }
 
-  .btn-write {
-    font-size: 1rem;
-    padding: 16px;
+  .bento-recent {
+    grid-column: span 1;
   }
 
-  .modal-content {
-    padding: 24px;
+  .bento-main-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .modal-container {
+    max-height: 90vh;
+  }
+
+  .modal-header {
+    padding: var(--space-5);
+  }
+
+  .modal-body {
+    padding: var(--space-5);
+  }
+
+  .ai-section {
+    margin: 0 var(--space-4) var(--space-4);
+  }
+
+  .modal-actions {
+    padding: var(--space-4);
   }
 }
+
+/* Animation classes from app.vue */
+.animate-fade-in-up {
+  opacity: 0;
+  animation: fadeInUp var(--duration-normal) var(--ease-out) forwards;
+}
+
+.animate-float {
+  animation: float 3s var(--ease-in-out) infinite;
+}
+
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
 </style>
