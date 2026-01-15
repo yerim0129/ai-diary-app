@@ -1,127 +1,73 @@
 /**
- * 💾 SQLite 데이터베이스 연결
+ * 💾 Vercel Postgres 데이터베이스 연결
  *
- * 📌 이 파일이 하는 일:
- * 1. SQLite DB 파일 생성 (diary.db)
- * 2. 테이블 생성 (diaries)
- * 3. DB 연결 객체 제공
+ * 📌 변경 사항 (SQLite → PostgreSQL):
+ * - 이전: better-sqlite3 (로컬 파일 DB)
+ * - 현재: @vercel/postgres (Vercel 클라우드 DB)
  *
- * 📁 DB 파일 위치: diary-app/data/diary.db
+ * 📁 환경변수 필요: POSTGRES_URL (Vercel에서 자동 설정)
  */
 
-import Database from 'better-sqlite3'
-import { resolve } from 'path'
-import { existsSync, mkdirSync } from 'fs'
+import { sql } from '@vercel/postgres'
 
 // ============================================
-// 📁 DB 파일 경로 설정
-// ============================================
-
-// 📌 data 폴더 경로 (프로젝트 루트/data)
-const dataDir = resolve(process.cwd(), 'data')
-
-// 📌 data 폴더가 없으면 생성
-if (!existsSync(dataDir)) {
-  console.log('📁 [Database] data 폴더 생성 중...')
-  mkdirSync(dataDir, { recursive: true })
-}
-
-// 📌 DB 파일 경로
-const dbPath = resolve(dataDir, 'diary.db')
-console.log('💾 [Database] DB 경로:', dbPath)
-
-// ============================================
-// 🔌 DB 연결
-// ============================================
-
-// 📌 SQLite DB 연결 (파일이 없으면 자동 생성)
-const db = new Database(dbPath)
-console.log('✅ [Database] SQLite 연결 성공!')
-
-// ============================================
-// 📋 테이블 생성
+// 📋 테이블 초기화 함수
 // ============================================
 
 /**
  * 📌 diaries 테이블 생성
- *
- * 컬럼 설명:
- * - id: 고유 식별자 (문자열, 기본키)
- * - content: 일기 내용 (필수)
- * - mood: 기분 (필수)
- * - date: 일기 날짜 (필수)
- * - images: 이미지 ID 배열 (JSON 문자열)
- * - prompt: AI 프롬프트 (선택)
- * - emotion: AI 분석 감정 (선택)
- * - emotionScore: 감정 점수 (선택)
- * - keywords: AI 분석 키워드 (JSON 문자열)
- * - feedback: AI 피드백 (선택)
- * - createdAt: 생성 시간
- * - updatedAt: 수정 시간 (선택)
+ * PostgreSQL 문법으로 변환됨
  */
-const createTableSQL = `
-  CREATE TABLE IF NOT EXISTS diaries (
-    id TEXT PRIMARY KEY,
-    content TEXT NOT NULL,
-    mood TEXT NOT NULL,
-    date TEXT NOT NULL,
-    images TEXT DEFAULT '[]',
-    prompt TEXT,
-    emotion TEXT,
-    emotionScore INTEGER,
-    keywords TEXT DEFAULT '[]',
-    feedback TEXT,
-    createdAt TEXT NOT NULL,
-    updatedAt TEXT
-  )
-`
+export async function initDatabase() {
+  console.log('💾 [Database] PostgreSQL 테이블 초기화 중...')
 
-// 📌 테이블 생성 실행
-db.exec(createTableSQL)
-console.log('✅ [Database] diaries 테이블 준비 완료!')
-
-// ============================================
-// 📋 마이그레이션: 새 컬럼 추가
-// ============================================
-
-/**
- * 📌 advice, aiSource 컬럼 추가 (AI 분석용)
- * 기존 테이블에 컬럼이 없으면 추가
- */
-try {
-  // advice 컬럼 추가
-  db.exec('ALTER TABLE diaries ADD COLUMN advice TEXT')
-  console.log('✅ [Database] advice 컬럼 추가됨')
-} catch (e: any) {
-  // 이미 컬럼이 있으면 에러 무시
-  if (!e.message.includes('duplicate column')) {
-    console.log('📌 [Database] advice 컬럼 이미 존재')
-  }
-}
-
-try {
-  // aiSource 컬럼 추가
-  db.exec('ALTER TABLE diaries ADD COLUMN aiSource TEXT')
-  console.log('✅ [Database] aiSource 컬럼 추가됨')
-} catch (e: any) {
-  // 이미 컬럼이 있으면 에러 무시
-  if (!e.message.includes('duplicate column')) {
-    console.log('📌 [Database] aiSource 컬럼 이미 존재')
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS diaries (
+        id TEXT PRIMARY KEY,
+        content TEXT NOT NULL,
+        mood TEXT NOT NULL,
+        date TEXT NOT NULL,
+        images TEXT DEFAULT '[]',
+        prompt TEXT,
+        emotion TEXT,
+        emotion_score INTEGER,
+        keywords TEXT DEFAULT '[]',
+        feedback TEXT,
+        advice TEXT,
+        ai_source TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT
+      )
+    `
+    console.log('✅ [Database] diaries 테이블 준비 완료!')
+    return { success: true }
+  } catch (error: any) {
+    console.error('❌ [Database] 테이블 생성 실패:', error.message)
+    return { success: false, error: error.message }
   }
 }
 
 // ============================================
-// 📦 DB 객체 내보내기
+// 📦 SQL 객체 내보내기
 // ============================================
 
-export { db }
+export { sql }
 
 // 📌 DB 정보 확인용 함수
-export function getDatabaseInfo() {
-  const count = db.prepare('SELECT COUNT(*) as count FROM diaries').get() as { count: number }
-  return {
-    path: dbPath,
-    tableExists: true,
-    diaryCount: count.count
+export async function getDatabaseInfo() {
+  try {
+    const result = await sql`SELECT COUNT(*) as count FROM diaries`
+    return {
+      type: 'PostgreSQL (Vercel)',
+      tableExists: true,
+      diaryCount: result.rows[0]?.count || 0
+    }
+  } catch (error: any) {
+    return {
+      type: 'PostgreSQL (Vercel)',
+      tableExists: false,
+      error: error.message
+    }
   }
 }

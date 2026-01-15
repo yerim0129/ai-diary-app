@@ -79,8 +79,8 @@ export default defineEventHandler(async (event) => {
       createdAt: new Date().toISOString()
     }
 
-    // 6. 저장소에 저장
-    const savedDiary = saveDiary(newDiary)
+    // 6. 저장소에 저장 (async)
+    const savedDiary = await saveDiary(newDiary)
     console.log('[POST /api/diaries] 저장 완료:', savedDiary.id)
 
     // 7. 성공 응답 반환

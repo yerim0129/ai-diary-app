@@ -22,7 +22,7 @@
 
 import { deleteDiary, getDiaryById } from '../../utils/diaryStore'
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   // 1. URL 파라미터에서 ID 추출
   const id = getRouterParam(event, 'id')
   console.log(`[DELETE /api/diaries/${id}] 일기 삭제 요청`)
@@ -38,8 +38,8 @@ export default defineEventHandler((event) => {
       })
     }
 
-    // 3. 일기 존재 여부 확인
-    const existingDiary = getDiaryById(id)
+    // 3. 일기 존재 여부 확인 (async)
+    const existingDiary = await getDiaryById(id)
     if (!existingDiary) {
       console.log(`[DELETE /api/diaries/${id}] 에러: 일기 없음`)
       throw createError({
@@ -49,8 +49,8 @@ export default defineEventHandler((event) => {
       })
     }
 
-    // 4. 일기 삭제
-    const deleted = deleteDiary(id)
+    // 4. 일기 삭제 (async)
+    const deleted = await deleteDiary(id)
 
     if (!deleted) {
       throw createError({

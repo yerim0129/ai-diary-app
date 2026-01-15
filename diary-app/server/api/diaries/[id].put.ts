@@ -48,8 +48,8 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // 3. 일기 존재 여부 확인
-    const existingDiary = getDiaryById(id)
+    // 3. 일기 존재 여부 확인 (async)
+    const existingDiary = await getDiaryById(id)
     if (!existingDiary) {
       console.log(`[PUT /api/diaries/${id}] 에러: 일기 없음`)
       throw createError({
@@ -72,8 +72,8 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // 6. 일기 수정 (updatedAt 자동 추가됨)
-    const updatedDiary = updateDiary(id, {
+    // 6. 일기 수정 (async, updatedAt 자동 추가됨)
+    const updatedDiary = await updateDiary(id, {
       content: body.content?.trim(),
       mood: body.mood?.trim(),
       date: body.date,

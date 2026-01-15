@@ -22,7 +22,7 @@
 
 import { getDiaryById } from '../../utils/diaryStore'
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   // 1. URL 파라미터에서 ID 추출
   const id = getRouterParam(event, 'id')
   console.log(`[GET /api/diaries/${id}] 특정 일기 조회 요청`)
@@ -38,8 +38,8 @@ export default defineEventHandler((event) => {
       })
     }
 
-    // 3. 저장소에서 일기 조회
-    const diary = getDiaryById(id)
+    // 3. 저장소에서 일기 조회 (async)
+    const diary = await getDiaryById(id)
 
     // 4. 일기가 없으면 404 에러
     if (!diary) {

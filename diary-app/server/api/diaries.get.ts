@@ -19,7 +19,7 @@
 
 import { getAllDiaries, type Diary } from '../utils/diaryStore'
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   console.log('[GET /api/diaries] 일기 목록 조회 요청')
 
   try {
@@ -35,8 +35,8 @@ export default defineEventHandler((event) => {
       mood: moodFilter
     })
 
-    // 2. 모든 일기 조회
-    let diaries: Diary[] = getAllDiaries()
+    // 2. 모든 일기 조회 (async)
+    let diaries: Diary[] = await getAllDiaries()
 
     // 3. 🔍 검색어 필터 적용 (content, prompt에서 검색)
     if (searchQuery && searchQuery.trim()) {
