@@ -1,135 +1,232 @@
 <template>
-  <div class="container">
-    <div class="content">
+  <div class="skeleton-container">
+    <div class="skeleton-content">
       <!-- 헤더 스켈레톤 -->
-      <header class="header">
-        <SkeletonLoader type="title" width="200px" />
-        <SkeletonLoader type="text" width="150px" />
+      <header class="skeleton-header">
+        <div class="skeleton-line skeleton-sm animate-shimmer"></div>
+        <div class="skeleton-line skeleton-lg animate-shimmer"></div>
+        <div class="skeleton-line skeleton-md animate-shimmer"></div>
       </header>
 
-      <!-- 통계 카드 스켈레톤 -->
-      <div class="stats-grid">
-        <div v-for="i in 3" :key="i" class="stat-card-skeleton">
-          <SkeletonLoader type="circle" width="48px" height="48px" />
-          <SkeletonLoader type="text" width="80px" height="14px" />
-          <SkeletonLoader type="text" width="60px" height="28px" />
-        </div>
-      </div>
+      <!-- Bento Grid 스켈레톤 -->
+      <div class="skeleton-bento">
+        <!-- 메인 CTA -->
+        <div class="skeleton-card skeleton-main animate-shimmer"></div>
 
-      <!-- 최근 일기 스켈레톤 -->
-      <div class="recent-section">
-        <div class="section-header">
-          <SkeletonLoader type="text" width="100px" height="20px" />
-          <SkeletonLoader type="text" width="80px" height="16px" />
+        <!-- 통계 카드 2개 -->
+        <div class="skeleton-card skeleton-stat animate-shimmer">
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-stat-content">
+            <div class="skeleton-line skeleton-value"></div>
+            <div class="skeleton-line skeleton-label"></div>
+          </div>
         </div>
-        <div class="recent-list">
-          <div v-for="i in 3" :key="i" class="recent-item-skeleton">
-            <SkeletonLoader type="circle" width="48px" height="48px" />
-            <div class="recent-info-skeleton">
-              <SkeletonLoader type="text" width="100px" height="14px" />
-              <SkeletonLoader type="text" width="200px" height="16px" />
+        <div class="skeleton-card skeleton-stat animate-shimmer">
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-stat-content">
+            <div class="skeleton-line skeleton-value"></div>
+            <div class="skeleton-line skeleton-label"></div>
+          </div>
+        </div>
+
+        <!-- 최근 일기 -->
+        <div class="skeleton-card skeleton-recent">
+          <div class="skeleton-recent-header">
+            <div class="skeleton-line" style="width: 80px; height: 20px;"></div>
+            <div class="skeleton-line" style="width: 60px; height: 16px;"></div>
+          </div>
+          <div class="skeleton-diary-list">
+            <div v-for="i in 3" :key="i" class="skeleton-diary-item animate-shimmer">
+              <div class="skeleton-emoji"></div>
+              <div class="skeleton-diary-content">
+                <div class="skeleton-line" style="width: 60px; height: 12px;"></div>
+                <div class="skeleton-line" style="width: 100%; height: 14px;"></div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- 액션 버튼 스켈레톤 -->
-      <div class="action-section">
-        <SkeletonLoader type="button" width="400px" />
+        <!-- 리포트 -->
+        <div class="skeleton-card skeleton-report animate-shimmer">
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-stat-content">
+            <div class="skeleton-line skeleton-label"></div>
+            <div class="skeleton-line skeleton-value"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.container {
+.skeleton-container {
   min-height: 100vh;
-  padding: 20px;
-  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  padding: var(--space-5);
 }
 
-.content {
+.skeleton-content {
   max-width: 900px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: var(--space-8) var(--space-4);
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 32px;
+/* Header */
+.skeleton-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-10);
 }
 
-.stats-grid {
+.skeleton-line {
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+}
+
+.skeleton-sm {
+  width: 80px;
+  height: 16px;
+}
+
+.skeleton-md {
+  width: 200px;
+  height: 16px;
+}
+
+.skeleton-lg {
+  width: 280px;
+  height: 36px;
+}
+
+/* Bento Grid */
+.skeleton-bento {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
 }
 
-.stat-card-skeleton {
+.skeleton-card {
   background: var(--bg-card);
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+}
+
+.skeleton-main {
+  grid-column: span 2;
+  height: 100px;
+}
+
+.skeleton-stat {
+  padding: var(--space-5);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 2px 8px var(--shadow);
+  gap: var(--space-3);
+  height: 140px;
 }
 
-.recent-section {
-  background: var(--bg-card);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 2px 8px var(--shadow);
+.skeleton-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
 }
 
-.section-header {
+.skeleton-stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.skeleton-value {
+  width: 80px;
+  height: 32px;
+}
+
+.skeleton-label {
+  width: 60px;
+  height: 14px;
+}
+
+.skeleton-recent {
+  grid-column: span 2;
+  padding: var(--space-6);
+}
+
+.skeleton-recent-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-5);
 }
 
-.recent-list {
+.skeleton-diary-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
-.recent-item-skeleton {
+.skeleton-diary-item {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 12px;
-  border-radius: 8px;
-  background: var(--bg-hover);
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--bg-subtle);
+  border-radius: var(--radius-lg);
 }
 
-.recent-info-skeleton {
+.skeleton-emoji {
+  width: 48px;
+  height: 48px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.skeleton-diary-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-2);
 }
 
-.action-section {
+.skeleton-report {
+  padding: var(--space-5);
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Shimmer animation */
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-subtle) 0%,
+    var(--bg-hover) 50%,
+    var(--bg-subtle) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 @media (max-width: 640px) {
-  .stats-grid {
+  .skeleton-bento {
     grid-template-columns: 1fr;
   }
 
-  .action-section {
-    width: 100%;
+  .skeleton-main,
+  .skeleton-recent {
+    grid-column: span 1;
+  }
+
+  .skeleton-lg {
+    width: 200px;
+    height: 28px;
   }
 }
 </style>
